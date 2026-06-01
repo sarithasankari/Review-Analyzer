@@ -1,0 +1,577 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}College/Institute Review Form - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header {
+        background: linear-gradient(135deg, #1a237e, #283593);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 0 0 10px 10px;
+    }
+
+    [data-theme="dark"] .header {
+        background: linear-gradient(135deg, #0d1245, #151d54);
+    }
+
+    .form-container {
+        background-color: var(--card-bg);
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+    }
+
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .rating-stars i {
+        transition: all 0.2s ease;
+    }
+
+    .rating-stars i:hover {
+        transform: scale(1.2);
+    }
+
+    .rating-label {
+        margin-right: 10px;
+        color: var(--text-color);
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #1a237e, #283593);
+        border: none;
+        padding: 0.8rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+    }
+
+    .submit-btn:hover {
+        background: linear-gradient(135deg, #283593, #3949ab);
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #3949ab;
+        box-shadow: 0 0 0 0.25rem rgba(57, 73, 171, 0.25);
+    }
+
+    .optional {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .rating-value {
+        margin-left: 10px;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+
+    .user-info {
+        background-color: var(--input-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .user-info i {
+        color: var(--primary-color);
+        margin-right: 8px;
+    }
+
+    .alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        width: 350px;
+    }
+
+    .profile-icon-large {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #1a237e, #283593);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin-right: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+        color: var(--secondary-color);
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alert-container" id="alertContainer"></div>
+
+<div class="header text-center">
+    <div class="container">
+        <h1><i class="fas fa-star-half-alt me-2"></i>College/Institute Review</h1>
+        <p class="lead">Share your experience to help others make informed decisions</p>
+    </div>
+</div>
+
+<div class="container" style="max-width: 900px;">
+    <div class="form-container">
+        <!-- User Info Display -->
+        <div class="user-info">
+            <div class="d-flex align-items-center">
+                <div class="profile-icon-large" style="overflow: hidden;">
+                    {% if user.userprofile.profile_picture %}
+                    <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    {{ user.first_name|default:user.username|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h5 class="mb-1" id="loggedInUserName" style="color: var(--secondary-color);">Loading...</h5>
+                    <small class="text-muted">You are submitting a review as a logged-in user</small>
+                </div>
+            </div>
+        </div>
+
+        <form id="reviewForm">
+            <!-- College Information Section -->
+            <div class="mb-4">
+                <h3 class="section-title">College Information</h3>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="collegeName" class="form-label">College/Institute Name <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="collegeName" value="{{ college_name|default:'' }}" {% if college_name %}readonly{% endif %} required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Personal Information</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required readonly>
+                        <div class="form-text">This field is automatically filled with your username</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="mobile" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education System Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Education System</h3>
+                <div class="mb-3">
+                    <label for="education" class="form-label">Tell us about the education system of the
+                        college/institute</label>
+                    <textarea class="form-control" id="education" rows="4"
+                        placeholder="Describe curriculum quality, teaching methods, academic resources, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Staff Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Staff</h3>
+                <div class="mb-3">
+                    <label for="staff" class="form-label">Tell us about the staff (faculty, administration,
+                        etc.)</label>
+                    <textarea class="form-control" id="staff" rows="4"
+                        placeholder="Describe faculty qualifications, teaching quality, administrative support, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Practical Experience Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Practical Experience</h3>
+                <div class="mb-3">
+                    <label for="practical" class="form-label">Tell us about the practical experience
+                        provided</label>
+                    <textarea class="form-control" id="practical" rows="4"
+                        placeholder="Describe labs, workshops, internships, industry exposure, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Fees Structure Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Fees Structure</h3>
+                <div class="mb-3">
+                    <label for="fees" class="form-label">Tell us about the fees structure</label>
+                    <textarea class="form-control" id="fees" rows="4"
+                        placeholder="Describe tuition fees, additional charges, payment options, scholarships, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Management Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Management</h3>
+                <div class="mb-3">
+                    <label for="management" class="form-label">Tell us about the management</label>
+                    <textarea class="form-control" id="management" rows="4"
+                        placeholder="Describe management responsiveness, policies, student support, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Sports & Cultural Activities Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Sports & Cultural Activities</h3>
+                <div class="mb-3">
+                    <label for="activities" class="form-label">Are there any sports or cultural activities? Please
+                        describe</label>
+                    <textarea class="form-control" id="activities" rows="4"
+                        placeholder="Describe available sports facilities, cultural events, clubs, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Placement Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Placement</h3>
+                <div class="mb-3">
+                    <label for="placement" class="form-label">How many students get placed? Rate the placement
+                        opportunities</label>
+                    <textarea class="form-control" id="placement" rows="4"
+                        placeholder="Describe placement statistics, companies visiting, career support, etc."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rate the placement cell <span class="optional">(optional)</span></label>
+                    <div class="d-flex align-items-center">
+                        <div class="rating-stars" id="placementRatingStars">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <span class="rating-value" id="placementRatingValue"></span>
+                    </div>
+                    <input type="hidden" id="placementRating" name="placementRating">
+                </div>
+            </div>
+
+            <!-- Travel Expense Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Travel Expense</h3>
+                <div class="mb-3">
+                    <label for="travel" class="form-label">Tell us about travel expenses and transportation
+                        facilities</label>
+                    <textarea class="form-control" id="travel" rows="4"
+                        placeholder="Describe transportation options, costs, commute time, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Entrepreneurship Support Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Entrepreneurship Support</h3>
+                <div class="mb-3">
+                    <label for="entrepreneurship" class="form-label">Does the college support entrepreneurship?
+                        Please describe</label>
+                    <textarea class="form-control" id="entrepreneurship" rows="4"
+                        placeholder="Describe incubation centers, startup support, mentorship, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Canteen Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Canteen & Food</h3>
+                <div class="mb-3">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="canteenAvailable">
+                        <label class="form-check-label" for="canteenAvailable">
+                            Canteen is available
+                        </label>
+                    </div>
+                    <label for="canteenReview" class="form-label">Update the food review <span
+                            class="optional">(optional)</span></label>
+                    <textarea class="form-control" id="canteenReview" rows="3"
+                        placeholder="Describe food quality, variety, hygiene, pricing, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Hostel Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Hostel Facilities</h3>
+                <div class="mb-3">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="hostelAvailable">
+                        <label class="form-check-label" for="hostelAvailable">
+                            Hostel is available
+                        </label>
+                    </div>
+                    <label for="hostel" class="form-label">Tell us about the hostel facilities</label>
+                    <textarea class="form-control" id="hostel" rows="4"
+                        placeholder="Describe rooms, amenities, food, rules, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Infrastructure Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Infrastructure</h3>
+                <div class="mb-3">
+                    <label for="infrastructure" class="form-label">Tell us about the infrastructure</label>
+                    <textarea class="form-control" id="infrastructure" rows="4"
+                        placeholder="Describe buildings, classrooms, labs, library, wifi, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Security</h3>
+                <div class="mb-3">
+                    <label for="security" class="form-label">Tell us about security measures</label>
+                    <textarea class="form-control" id="security" rows="4"
+                        placeholder="Describe campus security, CCTV, emergency protocols, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Overall Rating Section -->
+            <div class="mb-4">
+                <h3 class="section-title">Overall Rating</h3>
+                <div class="mb-3">
+                    <label class="form-label">Rate your college/institute</label>
+                    <div class="d-flex align-items-center">
+                        <div class="rating-stars" id="overallRatingStars">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <span class="rating-value" id="overallRatingValueDisplay"></span>
+                    </div>
+                    <input type="hidden" id="overallRatingValue" name="overallRating" required>
+                </div>
+                <div class="mb-3">
+                    <label for="overallReview" class="form-label">Overall Review <span
+                            class="text-danger">*</span></label>
+                    <textarea class="form-control" id="overallReview" rows="4" required
+                        placeholder="Provide your overall review and recommendations"></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary submit-btn">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enhanced star rating functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        // Simulate getting user data from authentication system
+        // In a real application, this would come from your backend/auth system
+        const getCurrentUser = () => {
+            return {
+                username: "{{ user.first_name|default:user.username }}",
+                email: "{{ user.email }}",
+                userId: "{{ user.id }}"
+            };
+        };
+
+        // Populate user information
+        const currentUser = getCurrentUser();
+        document.getElementById('loggedInUserName').textContent = currentUser.username;
+        document.getElementById('name').value = currentUser.username;
+
+        // Initialize all rating systems
+        initRatingSystem('placementRatingStars', 'placementRating', 'placementRatingValue');
+        initRatingSystem('overallRatingStars', 'overallRatingValue', 'overallRatingValueDisplay');
+
+        function initRatingSystem(starsContainerId, hiddenInputId, displayElementId) {
+            const starsContainer = document.getElementById(starsContainerId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            const displayElement = document.getElementById(displayElementId);
+            const stars = starsContainer.querySelectorAll('.fa-star');
+
+            let currentRating = 0;
+
+            stars.forEach(star => {
+                // Mouseover event - preview the rating
+                star.addEventListener('mouseover', function () {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    highlightStars(stars, rating);
+                    updateDisplay(displayElement, rating);
+                });
+
+                // Click event - set the rating
+                star.addEventListener('click', function () {
+                    currentRating = parseInt(this.getAttribute('data-rating'));
+                    hiddenInput.value = currentRating;
+                    highlightStars(stars, currentRating);
+                    updateDisplay(displayElement, currentRating);
+                });
+            });
+
+            // Mouseleave event - revert to selected rating
+            starsContainer.addEventListener('mouseleave', function () {
+                highlightStars(stars, currentRating);
+                updateDisplay(displayElement, currentRating);
+            });
+        }
+
+        function highlightStars(stars, rating) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.getAttribute('data-rating'));
+                if (starRating <= rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        function updateDisplay(displayElement, rating) {
+            if (displayElement) {
+                if (rating > 0) {
+                    displayElement.textContent = rating + '/5';
+                } else {
+                    displayElement.textContent = '';
+                }
+            }
+        }
+        // Form submission - fix field names
+        document.getElementById('reviewForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Validate required fields
+            const collegeName = document.getElementById('collegeName').value;
+            const name = document.getElementById('name').value;
+            const mobile = document.getElementById('mobile').value;
+            const overallReview = document.getElementById('overallReview').value;
+            const overallRating = document.getElementById('overallRatingValue').value;
+
+            if (!collegeName || !name || !mobile || !overallReview || !overallRating) {
+                showAlert('Please fill in all required fields', 'danger');
+                return;
+            }
+
+            // Collect all form data with correct field names
+            const formData = {
+                'college_name': collegeName,
+                'user_name': name,
+                'mobile_number': mobile,
+                'education_system': document.getElementById('education').value,
+                'staff_review': document.getElementById('staff').value,
+                'practical_experience': document.getElementById('practical').value,
+                'fees_structure': document.getElementById('fees').value,
+                'management_review': document.getElementById('management').value,
+                'sports_cultural': document.getElementById('activities').value,
+                'placement_review': document.getElementById('placement').value,
+                'placement_rating': document.getElementById('placementRating').value,
+                'travel_expense': document.getElementById('travel').value,
+                'entrepreneurship_support': document.getElementById('entrepreneurship').value,
+                'canteen_available': document.getElementById('canteenAvailable').checked ? 1 : 0,
+                'canteen_review': document.getElementById('canteenReview').value,
+                'hostel_available': document.getElementById('hostelAvailable').checked ? 1 : 0,
+                'hostel_review': document.getElementById('hostel').value,
+                'infrastructure_review': document.getElementById('infrastructure').value,
+                'security_review': document.getElementById('security').value,
+                'overall_rating': overallRating,
+                'overall_review': overallReview,
+            };
+
+            // Submit form data to server
+            fetch('/api/submit-review/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Thank you for your review! Your feedback has been submitted.', 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                        resetForm();
+                    } else {
+                        showAlert('There was an error submitting your review. Please try again.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('There was an error submitting your review. Please try again.', 'danger');
+                });
+        });
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.role = 'alert';
+            alert.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+            alertContainer.appendChild(alert);
+
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (document.getElementById(alertId)) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        function resetForm() {
+            document.getElementById('reviewForm').reset();
+
+            // Reset star ratings
+            document.querySelectorAll('.rating-stars i').forEach(star => {
+                star.classList.remove('fas');
+                star.classList.add('far');
+            });
+            document.querySelectorAll('input[type="hidden"]').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.rating-value').forEach(element => {
+                element.textContent = '';
+            });
+
+            // Keep the user name populated
+            document.getElementById('name').value = currentUser.username;
+        }
+    });
+</script>
+{% endblock %}

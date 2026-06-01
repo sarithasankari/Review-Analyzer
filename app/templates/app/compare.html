@@ -1,0 +1,451 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Compare Institutions - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .compare-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .selector-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        margin-bottom: 40px;
+    }
+
+    .compare-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .compare-header-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+        border: 2px solid var(--border-color);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .compare-header-initials {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        font-weight: bold;
+        margin: 0 auto 15px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+
+    .metric-row {
+        margin-bottom: 24px;
+    }
+
+    .metric-label {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        color: var(--secondary-color);
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 5px;
+        background-color: var(--border-color);
+    }
+
+    .progress-bar-primary {
+        background: linear-gradient(to right, #4a6ee0, #00d2ff);
+    }
+
+    .comparison-section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 8px;
+        margin-top: 40px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .comment-bubble {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        position: relative;
+        font-size: 0.9rem;
+        color: var(--text-color);
+    }
+
+    .comment-bubble:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 20px;
+        border-width: 10px 10px 0;
+        border-style: solid;
+        border-color: var(--bg-color) transparent;
+        display: block;
+        width: 0;
+    }
+
+    .vs-badge {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #ff5252, #ff793f);
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4);
+        z-index: 10;
+    }
+
+    @media (max-width: 991px) {
+        .vs-badge {
+            position: relative;
+            top: auto;
+            left: auto;
+            transform: none;
+            margin: 20px auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="compare-container">
+    <div class="mb-5">
+        <h1 class="fw-bold mb-1" style="color: var(--secondary-color);">Compare Institutions</h1>
+        <p class="text-muted mb-0">Select and compare colleges on ratings, facilities, and real student feedback.</p>
+    </div>
+
+    <!-- College Selectors -->
+    <div class="selector-card">
+        <form method="GET" action="{% url 'compare' %}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="college1" class="form-label fw-bold text-dark"><i class="fas fa-university me-2 text-primary"></i>First College</label>
+                <select name="college1" id="college1" class="form-select form-select-lg rounded-pill" required>
+                    <option value="" disabled selected>Select an institution...</option>
+                    {% for name in college_names %}
+                    <option value="{{ name }}" {% if name == college1_name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 text-center d-none d-md-block">
+                <span class="fs-4 fw-bold text-muted">VS</span>
+            </div>
+            <div class="col-md-5">
+                <label for="college2" class="form-label fw-bold text-dark"><i class="fas fa-university me-2 text-info"></i>Second College</label>
+                <select name="college2" id="college2" class="form-select form-select-lg rounded-pill" required>
+                    <option value="" disabled selected>Select an institution...</option>
+                    {% for name in college_names %}
+                    <option value="{{ name }}" {% if name == college2_name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 mt-4 text-center">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
+                    <i class="fas fa-balance-scale me-2"></i>Compare Now
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if comparison_data %}
+    <!-- Side-by-side Cards -->
+    <div class="row g-4 position-relative">
+        <div class="vs-badge">VS</div>
+        
+        <!-- College 1 Card -->
+        <div class="col-lg-6">
+            <div class="compare-card text-center">
+                {% with logo1=comparison_data.college1.name|get_institution_image %}
+                {% if logo1 %}
+                <img src="{% static logo1 %}" class="compare-header-img" alt="">
+                {% else %}
+                <div class="compare-header-initials">{{ comparison_data.college1.name|slice:":1"|upper }}</div>
+                {% endif %}
+                {% endwith %}
+                <h3 class="fw-bold mb-1" style="color: var(--secondary-color);">{{ comparison_data.college1.name }}</h3>
+                <p class="text-muted mb-4">{{ comparison_data.college1.review_count }} review{% if comparison_data.college1.review_count != 1 %}s{% endif %} submitted</p>
+                <hr class="my-4">
+
+                <!-- Metrics -->
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Overall Rating</span>
+                        <span>{{ comparison_data.college1.avg_overall }}/5</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {% widthratio comparison_data.college1.avg_overall 5 100 %}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Placement Rating</span>
+                        <span>{{ comparison_data.college1.avg_placement }}/5</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {% widthratio comparison_data.college1.avg_placement 5 100 %}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Hostel Availability</span>
+                        <span>{{ comparison_data.college1.hostel_pct }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ comparison_data.college1.hostel_pct }}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Canteen Availability</span>
+                        <span>{{ comparison_data.college1.canteen_pct }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ comparison_data.college1.canteen_pct }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- College 2 Card -->
+        <div class="col-lg-6">
+            <div class="compare-card text-center">
+                {% with logo2=comparison_data.college2.name|get_institution_image %}
+                {% if logo2 %}
+                <img src="{% static logo2 %}" class="compare-header-img" alt="">
+                {% else %}
+                <div class="compare-header-initials">{{ comparison_data.college2.name|slice:":1"|upper }}</div>
+                {% endif %}
+                {% endwith %}
+                <h3 class="fw-bold mb-1" style="color: var(--secondary-color);">{{ comparison_data.college2.name }}</h3>
+                <p class="text-muted mb-4">{{ comparison_data.college2.review_count }} review{% if comparison_data.college2.review_count != 1 %}s{% endif %} submitted</p>
+                <hr class="my-4">
+
+                <!-- Metrics -->
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Overall Rating</span>
+                        <span>{{ comparison_data.college2.avg_overall }}/5</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {% widthratio comparison_data.college2.avg_overall 5 100 %}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Placement Rating</span>
+                        <span>{{ comparison_data.college2.avg_placement }}/5</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-primary" role="progressbar" style="width: {% widthratio comparison_data.college2.avg_placement 5 100 %}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Hostel Availability</span>
+                        <span>{{ comparison_data.college2.hostel_pct }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ comparison_data.college2.hostel_pct }}%"></div>
+                    </div>
+                </div>
+
+                <div class="metric-row text-start">
+                    <div class="metric-label">
+                        <span>Canteen Availability</span>
+                        <span>{{ comparison_data.college2.canteen_pct }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ comparison_data.college2.canteen_pct }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Qualitative Section Comparisons -->
+    
+    <!-- Academics -->
+    <div class="comparison-section-title">
+        <i class="fas fa-graduation-cap text-primary"></i> Curriculum & Academics
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            {% if comparison_data.college1.edu_comments %}
+                {% for comment in comparison_data.college1.edu_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific academic comments found.</p>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            {% if comparison_data.college2.edu_comments %}
+                {% for comment in comparison_data.college2.edu_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific academic comments found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Faculty -->
+    <div class="comparison-section-title">
+        <i class="fas fa-chalkboard-teacher text-primary"></i> Faculty & Teaching Quality
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            {% if comparison_data.college1.staff_comments %}
+                {% for comment in comparison_data.college1.staff_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific faculty reviews found.</p>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            {% if comparison_data.college2.staff_comments %}
+                {% for comment in comparison_data.college2.staff_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific faculty reviews found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Infrastructure -->
+    <div class="comparison-section-title">
+        <i class="fas fa-building text-primary"></i> Campus & Infrastructure
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            {% if comparison_data.college1.infra_comments %}
+                {% for comment in comparison_data.college1.infra_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific infrastructure reviews found.</p>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            {% if comparison_data.college2.infra_comments %}
+                {% for comment in comparison_data.college2.infra_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific infrastructure reviews found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Placements -->
+    <div class="comparison-section-title">
+        <i class="fas fa-briefcase text-primary"></i> Placements & Career Support
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            {% if comparison_data.college1.placement_comments %}
+                {% for comment in comparison_data.college1.placement_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific placement comments found.</p>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            {% if comparison_data.college2.placement_comments %}
+                {% for comment in comparison_data.college2.placement_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific placement comments found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Fees -->
+    <div class="comparison-section-title">
+        <i class="fas fa-wallet text-primary"></i> Fees & Financial Transparency
+    </div>
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            {% if comparison_data.college1.fees_comments %}
+                {% for comment in comparison_data.college1.fees_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific fees comments found.</p>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            {% if comparison_data.college2.fees_comments %}
+                {% for comment in comparison_data.college2.fees_comments %}
+                <div class="comment-bubble">"{{ comment }}"</div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted italic px-3">No specific fees comments found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% elif college1_name and college2_name %}
+    <!-- Alert if no data is found -->
+    <div class="alert alert-warning text-center py-4 my-5" role="alert">
+        <i class="fas fa-exclamation-triangle fs-3 mb-2 d-block"></i>
+        Please make sure both selected institutions have reviews in the database to display a comparison.
+    </div>
+    {% else %}
+    <!-- Initial State illustration -->
+    <div class="text-center py-5 my-5 text-muted">
+        <i class="fas fa-balance-scale mb-3" style="font-size: 5rem; color: var(--border-color);"></i>
+        <h3>Select two institutions to compare side-by-side</h3>
+        <p>Pick colleges from the dropdowns above to analyze ratings, hostel/canteen amenities, and student feedback.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP – EduReview</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%; filter: blur(80px); opacity: .35; animation: float 8s ease-in-out infinite;
+    }
+    body::before { width: 500px; height: 500px; background: #764ba2; top: -150px; right: -150px; }
+    body::after  { width: 400px; height: 400px; background: #667eea; bottom: -120px; left: -120px; animation-delay: -4s; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+
+    .card-wrap {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,.96); backdrop-filter: blur(20px);
+      border-radius: 24px; box-shadow: 0 32px 80px rgba(0,0,0,.25);
+      padding: 52px 48px; width: 100%; max-width: 460px;
+      animation: slideUp .5s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    @keyframes slideUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    .brand-icon {
+      width: 72px; height: 72px; background: linear-gradient(135deg,#667eea,#764ba2);
+      border-radius: 20px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; color: #fff; margin: 0 auto 24px;
+      box-shadow: 0 8px 24px rgba(102,126,234,.4); animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{box-shadow:0 8px 24px rgba(102,126,234,.4)} 50%{box-shadow:0 8px 40px rgba(102,126,234,.7)} }
+
+    h1 { font-size: 1.65rem; font-weight: 800; color: #1a1a2e; text-align: center; }
+    .subtitle { color: #6c757d; font-size: .93rem; text-align: center; margin-top: 8px; line-height: 1.5; }
+
+    .step-bar { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 28px 0 32px; }
+    .step { width: 32px; height: 6px; border-radius: 3px; background: #e9ecef; transition: all .4s; }
+    .step.active { background: linear-gradient(90deg,#667eea,#764ba2); width: 52px; }
+
+    .form-label { font-weight: 600; color: #2d3748; font-size: .85rem; letter-spacing: .3px; margin-bottom: 8px; }
+    .form-control {
+      border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; text-align: center;
+      font-size: 1.5rem; letter-spacing: 4px; transition: all .3s; background: #f7f8fc; color: #1a1a2e;
+      font-family: monospace;
+    }
+    .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,.12); background:#fff; outline:none; }
+
+    .btn-main {
+      width: 100%; padding: 15px; background: linear-gradient(135deg,#667eea,#764ba2); color: #fff;
+      border: none; border-radius: 14px; font-size: 1rem; font-weight: 700; letter-spacing: .5px;
+      cursor: pointer; margin-top: 8px; transition: all .3s; position: relative; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(102,126,234,.35);
+    }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(102,126,234,.5); }
+    .btn-main:active { transform: translateY(0); }
+    .btn-main .spinner { display:none; width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    .alert { border-radius: 12px; font-size: .88rem; border: none; padding: 12px 16px; }
+    .alert-danger { background: #fff0f0; color: #c0392b; }
+    .alert-success { background: #f0fff4; color: #27ae60; }
+
+    .resend-box { text-align: center; margin-top: 24px; font-size: 0.9rem; }
+    .resend-box a { color: #667eea; text-decoration: none; font-weight: 600; }
+    .resend-box a:hover { color: #764ba2; }
+    .countdown { font-weight: bold; color: #e53e3e; }
+  </style>
+</head>
+<body>
+  <div class="card-wrap">
+    <div class="brand-icon"><i class="fas fa-key"></i></div>
+
+    <h1>Verify OTP</h1>
+    <p class="subtitle">Enter the 6-digit code sent to <br><strong>{{ mobile }}</strong></p>
+
+    <!-- Progress steps -->
+    <div class="step-bar">
+      <div class="step"></div>
+      <div class="step active"></div>
+      <div class="step"></div>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible mb-3" role="alert">
+      <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %} me-2"></i>
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST" id="verifyForm">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="form-label" for="otp">One-Time Password</label>
+        <input type="text" class="form-control" id="otp" name="otp"
+               placeholder="000000" required maxlength="6" pattern="\d{6}" autocomplete="one-time-code" autofocus>
+      </div>
+
+      <button type="submit" class="btn-main" id="submitBtn">
+        <span class="spinner me-2" id="spinner"></span>
+        <i class="fas fa-check-circle me-2" id="btnIcon"></i>Verify Code
+      </button>
+    </form>
+
+    <div class="resend-box text-muted">
+      Code expires in <span class="countdown" id="timer">--:--</span><br>
+      Didn't receive it? <a href="{% url 'resend_otp' %}">Resend OTP</a>
+      <br><br>
+      <a href="{% url 'forgot_password' %}">Change mobile number</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('verifyForm').addEventListener('submit', function() {
+      const btn = document.getElementById('submitBtn');
+      const spinner = document.getElementById('spinner');
+      const icon = document.getElementById('btnIcon');
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      icon.style.display = 'none';
+      btn.childNodes[btn.childNodes.length - 1].textContent = 'Verifying…';
+    });
+
+    let timeLeft = {{ seconds_left|default:300 }};
+    const timerElement = document.getElementById('timer');
+    const updateTimer = () => {
+      if (timeLeft <= 0) {
+        timerElement.textContent = "Expired";
+        return;
+      }
+      let m = Math.floor(timeLeft / 60);
+      let s = timeLeft % 60;
+      timerElement.textContent = m + ":" + (s < 10 ? "0" : "") + s;
+      timeLeft--;
+    };
+    updateTimer();
+    setInterval(updateTimer, 1000);
+  </script>
+</body>
+</html>

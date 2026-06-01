@@ -1,0 +1,257 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Project Review System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+        url("{% static 'images/img3.webp' %}");
+        background-size: cover;
+        background-position: center;
+        height: 70vh;
+        display: flex;
+        align-items: center;
+        color: white;
+    }
+
+    .card-category {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .college-category {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+    }
+
+    .institute-category {
+        background: linear-gradient(135deg, #00b09b, #96c93d);
+    }
+
+    .opinion-category {
+        background: linear-gradient(135deg, #ff8c00, #ff2d55);
+    }
+
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        background-color: var(--card-bg);
+        /* Use global variable */
+        border: 1px solid var(--border-color);
+        /* Use global variable */
+    }
+
+    .card-title {
+        color: var(--secondary-color);
+        /* Ensure title visible in dark mode */
+    }
+
+    .card-text {
+        color: var(--text-color);
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .stats {
+        border-top: 1px solid #e9ecef;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1rem 0;
+    }
+
+    .social-icons a {
+        transition: transform 0.3s ease;
+    }
+
+    .social-icons a:hover {
+        transform: translateY(-3px);
+    }
+
+    .search-container {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .search-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Ensure search input looks good in dark mode */
+    /* The search container itself is hardcoded bg-white in HTML class, might need override */
+    /* I'll target it specifically in content block or add override here */
+    [data-theme="dark"] .input-group.bg-white {
+        background-color: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    [data-theme="dark"] .input-group-text.bg-white {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color);
+    }
+
+    [data-theme="dark"] #searchInput {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+
+    [data-theme="dark"] #searchInput::placeholder {
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-4">The Review Analyzer automatically identifies and classifies user opinions
+            as positive, negative, or neutral sentiments.</h1>
+        <p class="lead">Transforms written feedback into useful insights for improvement and growth.</p>
+    </div>
+</div>
+
+<!-- Search Section -->
+<div class="container" style="margin-top: 50px; position: relative; z-index: 10; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div
+                class="input-group input-group-lg bg-white rounded-pill shadow-lg search-container transform-hover p-2 border border-2 border-primary">
+                <span class="input-group-text bg-white border-0 ps-4 rounded-start-pill">
+                    <i class="fas fa-search text-primary"></i>
+                </span>
+                <input type="text" class="form-control border-0 ps-2" id="searchInput"
+                    placeholder="Search colleges, institutes, or locations..."
+                    style="font-size: 1.1rem; outline: none; box-shadow: none;">
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" type="button" id="searchButton"
+                    style="min-width: 120px;">
+                    Search
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards Section -->
+<div class="container main-content mb-5">
+    <div class="row g-4" id="cardsContainer">
+        {% for college in colleges %}
+        <!-- Card -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="position-relative">
+                    {% with logo_path=college.name|get_institution_image %}
+                    {% if logo_path %}
+                    <img src="{% static logo_path %}" class="card-img-top" alt="{{ college.name }}">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-primary text-white card-img-top fw-bold fs-2" style="height: 200px; background: linear-gradient(135deg, var(--primary-color), var(--accent-color));">
+                        {{ college.name|slice:":1"|upper }}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    <span class="card-category {% if college.category == 'College' %}college-category{% else %}institute-category{% endif %}">
+                        {{ college.category }}
+                    </span>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ college.name }}</h5>
+                    <div class="card-details mb-3">
+                        <p class="card-text mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            {{ college.location }}
+                        </p>
+                        <p class="card-text mb-2">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            Rating: 
+                            {% if college.review_count > 0 %}
+                            {{ college.avg_rating }}/5
+                            {% else %}
+                            No ratings yet
+                            {% endif %}
+                        </p>
+                        <p class="card-text mb-2">
+                            <i class="fas fa-comments text-info me-2"></i>
+                            Reviews: {{ college.review_count }}
+                        </p>
+                        <p class="card-text">{{ college.description }}</p>
+                    </div>
+                    <div class="btn-group mt-auto">
+                        <a href="{% url 'review_page_with_college' college.name %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Give Review
+                        </a>
+                        <a href="{% url 'view_reviews' college.name %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-eye me-2"></i>View Reviews
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Search Functionality Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const cards = cardsContainer.querySelectorAll('.col-md-6.col-lg-4');
+
+        function filterCards() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            let hasResults = false;
+
+            cards.forEach(card => {
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const text = card.querySelector('.card-text').textContent.toLowerCase(); // Check description too (location, etc)
+                const category = card.querySelector('.card-category').textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || text.includes(searchTerm) || category.includes(searchTerm)) {
+                    card.style.display = ''; // Show
+                    hasResults = true;
+                } else {
+                    card.style.display = 'none'; // Hide
+                }
+            });
+
+            // Optional: Show "No results" message
+            let noResultsMsg = document.getElementById('noResultsMsg');
+            if (!hasResults) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.id = 'noResultsMsg';
+                    noResultsMsg.className = 'col-12 text-center py-5';
+                    noResultsMsg.innerHTML = '<h3 class="text-muted">No institutions found matching your search.</h3>';
+                    cardsContainer.appendChild(noResultsMsg);
+                }
+            } else if (noResultsMsg) {
+                noResultsMsg.remove();
+            }
+        }
+
+        // Real-time search
+        searchInput.addEventListener('keyup', filterCards);
+
+        // Search button click
+        searchButton.addEventListener('click', filterCards);
+    });
+</script>
+{% endblock %}

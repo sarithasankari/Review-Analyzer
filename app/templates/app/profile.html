@@ -1,0 +1,1039 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}{{ user.get_full_name|default:user.username }}'s Profile · EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ═══════════════════════════════════════════
+   TOKENS & DARK-MODE SUPPORT
+═══════════════════════════════════════════ */
+:root {
+  --pr-accent: #6366f1;
+  --pr-accent2: #a855f7;
+  --pr-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 60%, #ec4899 100%);
+  --pr-grad-subtle: linear-gradient(135deg, rgba(99,102,241,.12) 0%, rgba(168,85,247,.08) 100%);
+  --pr-card: #ffffff;
+  --pr-card-border: rgba(0,0,0,.07);
+  --pr-body: #f4f5fb;
+  --pr-text: #0f172a;
+  --pr-muted: #64748b;
+  --pr-shadow: 0 20px 60px rgba(99,102,241,.15), 0 4px 20px rgba(0,0,0,.06);
+  --pr-radius: 20px;
+  --pr-transition: all .3s cubic-bezier(.4,0,.2,1);
+  --toast-bg: #0f172a;
+}
+[data-theme="dark"] {
+  --pr-card: #1e1e2e;
+  --pr-card-border: rgba(255,255,255,.08);
+  --pr-body: #13131f;
+  --pr-text: #e2e8f0;
+  --pr-muted: #94a3b8;
+  --pr-shadow: 0 20px 60px rgba(0,0,0,.5), 0 4px 20px rgba(0,0,0,.3);
+  --pr-grad-subtle: linear-gradient(135deg, rgba(99,102,241,.18) 0%, rgba(168,85,247,.12) 100%);
+}
+* { box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif !important; background: var(--pr-body); }
+
+/* ═══════════════════════════════════════════
+   HERO BANNER
+═══════════════════════════════════════════ */
+.pr-hero {
+  min-height: 260px;
+  background: var(--pr-grad);
+  position: relative;
+  overflow: hidden;
+}
+.pr-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(255,255,255,.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,255,255,.1) 0%, transparent 50%);
+}
+.pr-hero-circles {
+  position: absolute; inset: 0; overflow: hidden;
+}
+.pr-hero-circles span {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  animation: floatCircle 8s ease-in-out infinite;
+}
+.pr-hero-circles span:nth-child(1){ width:300px;height:300px;top:-80px;left:-60px;animation-delay:0s; }
+.pr-hero-circles span:nth-child(2){ width:200px;height:200px;top:40px;right:10%;animation-delay:2s; }
+.pr-hero-circles span:nth-child(3){ width:150px;height:150px;bottom:-40px;left:30%;animation-delay:4s; }
+@keyframes floatCircle {
+  0%,100%{ transform: translateY(0) scale(1); }
+  50%{ transform: translateY(-18px) scale(1.06); }
+}
+
+/* ═══════════════════════════════════════════
+   PAGE WRAPPER
+═══════════════════════════════════════════ */
+.pr-wrapper {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CARD (floats over hero)
+═══════════════════════════════════════════ */
+.pr-card {
+  background: var(--pr-card);
+  border-radius: var(--pr-radius);
+  box-shadow: var(--pr-shadow);
+  border: 1px solid var(--pr-card-border);
+  margin-top: -90px;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+  animation: cardSlideUp .5s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes cardSlideUp {
+  from { opacity:0; transform: translateY(30px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════
+   PROFILE TOP
+═══════════════════════════════════════════ */
+.pr-top {
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  padding: 36px 44px 28px;
+  flex-wrap: wrap;
+}
+
+/* Avatar */
+.pr-avatar-wrap { position: relative; flex-shrink: 0; }
+.pr-avatar {
+  width: 128px; height: 128px;
+  border-radius: 50%;
+  border: 5px solid var(--pr-card);
+  box-shadow: 0 0 0 3px var(--pr-accent), 0 8px 30px rgba(99,102,241,.35);
+  object-fit: cover;
+  background: var(--pr-grad);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 3rem; font-weight: 800;
+  overflow: hidden;
+  transition: var(--pr-transition);
+}
+.pr-avatar:hover { transform: scale(1.04); }
+.pr-avatar-cam {
+  position: absolute; bottom: 5px; right: 5px;
+  width: 32px; height: 32px;
+  background: var(--pr-grad);
+  border-radius: 50%;
+  border: 2.5px solid var(--pr-card);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #fff; font-size: .75rem;
+  transition: var(--pr-transition);
+  box-shadow: 0 2px 10px rgba(99,102,241,.4);
+}
+.pr-avatar-cam:hover { transform: scale(1.15); }
+
+/* Completion Ring */
+.completion-ring {
+  position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px;
+  border-radius: 50%;
+  background: conic-gradient(var(--pr-accent) var(--pct, 0%), transparent 0%);
+  opacity: .25;
+  pointer-events: none;
+}
+
+/* Info */
+.pr-info { flex: 1; min-width: 220px; }
+.pr-name {
+  font-size: 1.9rem; font-weight: 800;
+  color: var(--pr-text);
+  line-height: 1.15; margin-bottom: 4px;
+  letter-spacing: -.5px;
+}
+.pr-handle {
+  font-size: .9rem; color: var(--pr-muted);
+  margin-bottom: 10px;
+}
+.pr-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.pr-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--pr-grad-subtle);
+  border: 1px solid rgba(99,102,241,.18);
+  border-radius: 999px; padding: 4px 12px;
+  font-size: .78rem; color: var(--pr-accent);
+  font-weight: 600; transition: var(--pr-transition);
+}
+.pr-chip:hover { background: rgba(99,102,241,.18); transform: translateY(-1px); }
+.pr-bio {
+  font-size: .93rem; color: var(--pr-muted);
+  line-height: 1.6; max-width: 440px;
+}
+.pr-bio-empty { font-style: italic; opacity: .5; }
+
+/* Completion Bar */
+.pr-completion {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 12px;
+}
+.pr-completion-bar {
+  flex: 1; height: 5px; background: rgba(99,102,241,.12);
+  border-radius: 999px; overflow: hidden;
+}
+.pr-completion-fill {
+  height: 100%;
+  background: var(--pr-grad);
+  border-radius: 999px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+.pr-completion-label {
+  font-size: .78rem; font-weight: 700; color: var(--pr-accent);
+  white-space: nowrap;
+}
+
+/* CTA buttons */
+.pr-ctas {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  align-self: flex-start; margin-top: 6px;
+}
+.btn-pr-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--pr-grad); color: #fff;
+  border: none; border-radius: 12px; padding: 10px 22px;
+  font-size: .88rem; font-weight: 700;
+  cursor: pointer; transition: var(--pr-transition);
+  box-shadow: 0 3px 14px rgba(99,102,241,.35);
+  text-decoration: none;
+}
+.btn-pr-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(99,102,241,.45); color:#fff; }
+.btn-pr-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent;
+  border: 1.5px solid var(--pr-card-border);
+  color: var(--pr-text); border-radius: 12px; padding: 9px 20px;
+  font-size: .88rem; font-weight: 600;
+  cursor: pointer; transition: var(--pr-transition);
+  text-decoration: none;
+}
+.btn-pr-ghost:hover { border-color: var(--pr-accent); color: var(--pr-accent); background: var(--pr-grad-subtle); }
+
+/* ═══════════════════════════════════════════
+   STATS STRIP
+═══════════════════════════════════════════ */
+.pr-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--pr-card-border);
+  border-bottom: 1px solid var(--pr-card-border);
+}
+.pr-stat {
+  padding: 22px 12px;
+  text-align: center;
+  border-right: 1px solid var(--pr-card-border);
+  transition: var(--pr-transition);
+  cursor: default; position: relative; overflow: hidden;
+}
+.pr-stat:last-child { border-right: none; }
+.pr-stat::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--pr-grad); opacity: 0;
+  transition: opacity .3s;
+}
+.pr-stat:hover::before { opacity: .04; }
+.pr-stat-num {
+  display: block;
+  font-size: 1.7rem; font-weight: 900;
+  background: var(--pr-grad);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1;
+  position: relative;
+}
+.pr-stat-icon {
+  font-size: .9rem; margin-bottom: 6px; display: block;
+  opacity: .5; color: var(--pr-accent);
+  position: relative;
+}
+.pr-stat-lbl {
+  font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--pr-muted); display: block;
+  margin-top: 5px; position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+.pr-tabs {
+  display: flex; gap: 0;
+  padding: 0 44px;
+  border-bottom: 1px solid var(--pr-card-border);
+  overflow-x: auto;
+}
+.pr-tab {
+  display: flex; align-items: center; gap: 7px;
+  background: none; border: none; cursor: pointer;
+  padding: 16px 22px;
+  font-size: .88rem; font-weight: 600;
+  color: var(--pr-muted);
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: var(--pr-transition);
+  white-space: nowrap;
+}
+.pr-tab i { font-size: .85rem; }
+.pr-tab:hover { color: var(--pr-accent); }
+.pr-tab.active { color: var(--pr-accent); border-bottom-color: var(--pr-accent); }
+
+/* Tab panels */
+.pr-panel { display: none; padding: 36px 44px; animation: panelFade .3s ease; }
+.pr-panel.active { display: block; }
+@keyframes panelFade { from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+/* ═══════════════════════════════════════════
+   REVIEW CARDS (activity tab)
+═══════════════════════════════════════════ */
+.pr-section-title {
+  font-size: 1rem; font-weight: 800; color: var(--pr-text);
+  margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+}
+.pr-section-title i { color: var(--pr-accent); }
+
+.pr-review-card {
+  background: var(--pr-grad-subtle);
+  border: 1px solid rgba(99,102,241,.12);
+  border-radius: 16px; padding: 22px;
+  margin-bottom: 14px;
+  transition: var(--pr-transition);
+  position: relative; overflow: hidden;
+}
+.pr-review-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--pr-grad); border-radius: 2px;
+}
+.pr-review-card:hover {
+  box-shadow: 0 8px 30px rgba(99,102,241,.12);
+  transform: translateY(-3px);
+  border-color: rgba(99,102,241,.25);
+}
+.pr-review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.pr-review-college { font-size: 1rem; font-weight: 800; color: var(--pr-text); margin-bottom: 4px; }
+.pr-review-date { font-size: .75rem; color: var(--pr-muted); white-space: nowrap; margin-left: 10px; }
+.pr-stars { letter-spacing: 2px; font-size: .85rem; margin-bottom: 8px; }
+.star-filled { color: #f59e0b; }
+.star-empty { color: #d1d5db; }
+.pr-review-excerpt {
+  font-size: .88rem; color: var(--pr-muted);
+  line-height: 1.6;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 14px;
+}
+.pr-review-footer { display: flex; align-items: center; gap: 16px; }
+.pr-review-stat {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .8rem; color: var(--pr-muted); font-weight: 600;
+}
+.pr-review-stat i { font-size: .78rem; }
+.pr-review-link {
+  margin-left: auto; font-size: .82rem; font-weight: 700;
+  color: var(--pr-accent); text-decoration: none;
+  display: flex; align-items: center; gap: 5px;
+  transition: var(--pr-transition);
+}
+.pr-review-link:hover { gap: 8px; color: var(--pr-accent2); }
+
+/* Skeleton loader */
+.pr-skeleton {
+  background: linear-gradient(90deg, var(--pr-card-border) 25%, rgba(99,102,241,.08) 50%, var(--pr-card-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 10px;
+}
+@keyframes shimmer { 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+.skeleton-card { height: 120px; border-radius: 16px; margin-bottom: 14px; }
+
+.pr-empty {
+  text-align: center; padding: 48px 20px;
+}
+.pr-empty-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: var(--pr-grad-subtle);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 1.8rem; color: var(--pr-accent);
+}
+.pr-empty h3 { font-size: 1.1rem; font-weight: 800; color: var(--pr-text); margin-bottom: 8px; }
+.pr-empty p { font-size: .88rem; color: var(--pr-muted); margin-bottom: 20px; }
+
+/* See all link */
+.pr-see-all {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .85rem; font-weight: 700; color: var(--pr-accent);
+  text-decoration: none; margin-top: 10px;
+  transition: var(--pr-transition);
+}
+.pr-see-all:hover { gap: 10px; color: var(--pr-accent2); }
+
+/* ═══════════════════════════════════════════
+   EDIT FORM
+═══════════════════════════════════════════ */
+.pr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.pr-field { display: flex; flex-direction: column; gap: 6px; }
+.pr-field.full { grid-column: 1 / -1; }
+.pr-label {
+  font-size: .76rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .7px;
+  color: var(--pr-muted);
+}
+.pr-input, .pr-textarea {
+  background: var(--pr-body);
+  border: 1.5px solid var(--pr-card-border);
+  border-radius: 12px; padding: 11px 15px;
+  font-size: .93rem; color: var(--pr-text);
+  font-family: 'Inter', sans-serif;
+  transition: var(--pr-transition);
+  outline: none; width: 100%;
+}
+.pr-input:focus, .pr-textarea:focus {
+  border-color: var(--pr-accent);
+  box-shadow: 0 0 0 4px rgba(99,102,241,.1);
+  background: var(--pr-card);
+}
+.pr-input.error, .pr-textarea.error { border-color: #f43f5e; box-shadow: 0 0 0 3px rgba(244,63,94,.1); }
+.pr-input-err { font-size: .78rem; color: #f43f5e; margin-top: 2px; }
+.pr-textarea { resize: vertical; min-height: 90px; }
+
+/* Photo upload zone */
+.pr-photo-zone {
+  display: flex; align-items: center; gap: 20px;
+  background: var(--pr-body);
+  border: 2px dashed var(--pr-card-border);
+  border-radius: 16px; padding: 20px;
+  cursor: pointer; transition: var(--pr-transition);
+}
+.pr-photo-zone:hover { border-color: var(--pr-accent); background: var(--pr-grad-subtle); }
+.pr-photo-preview {
+  width: 60px; height: 60px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--pr-grad);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.4rem; font-weight: 800;
+  overflow: hidden;
+}
+.pr-photo-text strong { display: block; font-size: .9rem; font-weight: 700; color: var(--pr-text); margin-bottom: 2px; }
+.pr-photo-text span { font-size: .78rem; color: var(--pr-muted); }
+
+/* Form actions */
+.pr-form-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; align-items: center; }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.pr-toast-container {
+  position: fixed; top: 20px; right: 20px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none;
+}
+.pr-toast {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--toast-bg); color: #f1f5f9;
+  padding: 14px 20px; border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  font-size: .88rem; font-weight: 600;
+  min-width: 260px;
+  animation: toastIn .4s cubic-bezier(.4,0,.2,1) both;
+  pointer-events: all;
+}
+.pr-toast.success .pr-toast-icon { color: #4ade80; }
+.pr-toast.error .pr-toast-icon { color: #f87171; }
+.pr-toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+.pr-toast-close {
+  margin-left: auto; background: none; border: none;
+  color: #94a3b8; cursor: pointer; font-size: .85rem;
+  padding: 2px 4px; border-radius: 4px; line-height: 1;
+}
+.pr-toast-close:hover { color: #f1f5f9; }
+@keyframes toastIn { from{ opacity:0; transform:translateX(40px); } to{ opacity:1; transform:translateX(0); } }
+@keyframes toastOut { from{ opacity:1; transform:translateX(0); } to{ opacity:0; transform:translateX(40px); } }
+
+/* Dark mode toggle */
+.pr-dark-toggle {
+  position: absolute; top: 20px; right: 20px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff; border-radius: 10px;
+  padding: 8px 14px; font-size: .8rem;
+  cursor: pointer; backdrop-filter: blur(10px);
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 600; transition: var(--pr-transition);
+}
+.pr-dark-toggle:hover { background: rgba(255,255,255,.25); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:700px){
+  .pr-top { flex-direction: column; align-items: center; text-align: center; padding: 28px 20px 20px; }
+  .pr-chips { justify-content: center; }
+  .pr-bio { max-width: 100%; }
+  .pr-ctas { justify-content: center; }
+  .pr-stats { grid-template-columns: repeat(2,1fr); }
+  .pr-tabs { padding: 0 12px; }
+  .pr-panel { padding: 28px 20px; }
+  .pr-form-grid { grid-template-columns: 1fr; }
+  .pr-field.full { grid-column: 1; }
+  .pr-stat:nth-child(2) { border-right: none; }
+  .pr-stat:nth-child(3) { border-right: 1px solid var(--pr-card-border); }
+}
+@media(max-width:400px){
+  .pr-name { font-size: 1.4rem; }
+  .pr-stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ── TOAST CONTAINER ─────────────────────── -->
+<div class="pr-toast-container" id="toastContainer">
+  {% if messages %}
+    {% for message in messages %}
+    <div class="pr-toast {% if message.tags == 'success' %}success{% else %}error{% endif %}" role="alert">
+      <span class="pr-toast-icon">
+        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+      </span>
+      <span>{{ message }}</span>
+      <button class="pr-toast-close" onclick="closeToast(this)">✕</button>
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<!-- ── HERO ────────────────────────────────── -->
+<div class="pr-hero">
+  <div class="pr-hero-circles">
+    <span></span><span></span><span></span>
+  </div>
+  <button class="pr-dark-toggle" onclick="toggleDark()" id="darkToggleBtn">
+    <i class="fas fa-moon" id="darkIcon"></i> Dark Mode
+  </button>
+</div>
+
+<!-- ── PAGE WRAPPER ───────────────────────── -->
+<div class="pr-wrapper">
+<div class="pr-card">
+
+  <!-- ── PROFILE TOP ──────────────────────── -->
+  <div class="pr-top">
+
+    <!-- Avatar -->
+    <div class="pr-avatar-wrap">
+      <div class="pr-avatar" id="bigAvatar">
+        {% if user_profile.profile_picture %}
+          <img src="{{ user_profile.profile_picture.url }}"
+               style="width:100%;height:100%;object-fit:cover;border-radius:50%;"
+               alt="{{ user.get_full_name }}">
+        {% else %}
+          {{ user.username|make_list|first|upper }}
+        {% endif %}
+      </div>
+      <label for="id_profile_picture" class="pr-avatar-cam" title="Change photo">
+        <i class="fas fa-camera"></i>
+      </label>
+    </div>
+
+    <!-- Info -->
+    <div class="pr-info">
+      <div class="pr-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="pr-handle">
+        <i class="fas fa-at" style="opacity:.5;margin-right:2px;"></i>{{ user.username }}
+        &nbsp;·&nbsp;
+        <i class="far fa-envelope" style="opacity:.5;margin-right:2px;"></i>{{ user.email }}
+      </div>
+
+      <div class="pr-chips">
+        {% if user_profile.location %}
+        <span class="pr-chip"><i class="fas fa-map-marker-alt"></i>{{ user_profile.location }}</span>
+        {% endif %}
+        <span class="pr-chip"><i class="far fa-calendar"></i>Joined {{ user.date_joined|date:"M Y" }}</span>
+        {% if user_profile.is_verified %}
+        <span class="pr-chip" style="color:#22c55e;border-color:#bbf7d0;background:rgba(34,197,94,.08);">
+          <i class="fas fa-check-circle"></i>Verified
+        </span>
+        {% endif %}
+      </div>
+
+      {% if user_profile.bio %}
+      <div class="pr-bio">{{ user_profile.bio }}</div>
+      {% else %}
+      <div class="pr-bio pr-bio-empty">No bio yet — click Edit Profile to add one ✏️</div>
+      {% endif %}
+
+      <!-- Profile completion -->
+      <div class="pr-completion" style="margin-top:14px;">
+        <div class="pr-completion-bar">
+          <div class="pr-completion-fill" id="completionFill" style="width:0%;"></div>
+        </div>
+        <span class="pr-completion-label" id="completionLabel">0% complete</span>
+      </div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="pr-ctas">
+      <button class="btn-pr-primary" onclick="switchTab('edit')">
+        <i class="fas fa-user-edit"></i> Edit Profile
+      </button>
+      <a href="{% url 'my_reviews' %}" class="btn-pr-ghost">
+        <i class="fas fa-list-ul"></i> My Reviews
+      </a>
+    </div>
+  </div>
+
+  <!-- ── STATS STRIP ──────────────────────── -->
+  <div class="pr-stats">
+    <div class="pr-stat">
+      <span class="pr-stat-icon"><i class="fas fa-pen-alt"></i></span>
+      <span class="pr-stat-num" data-target="{{ reviews_count }}">0</span>
+      <span class="pr-stat-lbl">Reviews</span>
+    </div>
+    <div class="pr-stat">
+      <span class="pr-stat-icon"><i class="fas fa-heart"></i></span>
+      <span class="pr-stat-num" data-target="{{ likes_received }}">0</span>
+      <span class="pr-stat-lbl">Likes Received</span>
+    </div>
+    <div class="pr-stat">
+      <span class="pr-stat-icon"><i class="fas fa-bookmark"></i></span>
+      <span class="pr-stat-num" data-target="{{ saved_count }}">0</span>
+      <span class="pr-stat-lbl">Saved</span>
+    </div>
+    <div class="pr-stat">
+      <span class="pr-stat-icon"><i class="far fa-calendar-alt"></i></span>
+      <span class="pr-stat-num" style="font-size:1rem;margin-top:4px;">{{ user.date_joined|date:"M Y" }}</span>
+      <span class="pr-stat-lbl">Member Since</span>
+    </div>
+  </div>
+
+  <!-- ── TABS ─────────────────────────────── -->
+  <div class="pr-tabs">
+    <button class="pr-tab active" id="tab-activity" onclick="switchTab('activity')">
+      <i class="fas fa-bolt"></i> Recent Activity
+    </button>
+    <button class="pr-tab" id="tab-edit" onclick="switchTab('edit')">
+      <i class="fas fa-user-edit"></i> Edit Profile
+    </button>
+  </div>
+
+  <!-- ── PANEL: ACTIVITY ──────────────────── -->
+  <div class="pr-panel active" id="panel-activity">
+    <div class="pr-section-title">
+      <i class="fas fa-clock"></i> Latest Reviews
+    </div>
+
+    <!-- Skeleton (shown briefly on load) -->
+    <div id="skeletonLoader">
+      <div class="pr-skeleton skeleton-card"></div>
+      <div class="pr-skeleton skeleton-card" style="opacity:.7;"></div>
+      <div class="pr-skeleton skeleton-card" style="opacity:.4;"></div>
+    </div>
+
+    <!-- Real content (hidden until skeleton fades) -->
+    <div id="activityContent" style="display:none;">
+      {% for review in recent_reviews %}
+      <div class="pr-review-card">
+        <div class="pr-review-header">
+          <div>
+            <div class="pr-review-college">{{ review.college_name }}</div>
+            <div class="pr-stars">
+              {% for i in "12345" %}
+                {% if forloop.counter <= review.overall_rating %}
+                  <span class="star-filled">★</span>
+                {% else %}
+                  <span class="star-empty">★</span>
+                {% endif %}
+              {% endfor %}
+              <span style="font-size:.78rem;color:var(--pr-muted);margin-left:4px;letter-spacing:0;">({{ review.overall_rating }}/5)</span>
+            </div>
+          </div>
+          <div class="pr-review-date">{{ review.created_at|date:"d M Y" }}</div>
+        </div>
+        <div class="pr-review-excerpt">{{ review.overall_review }}</div>
+        <div class="pr-review-footer">
+          <span class="pr-review-stat"><i class="fas fa-heart" style="color:#f43f5e;"></i>{{ review.likes.count }}</span>
+          <span class="pr-review-stat"><i class="fas fa-comment" style="color:var(--pr-accent);"></i>{{ review.comments.count }}</span>
+          <a href="{% url 'view_reviews' review.college_name %}" class="pr-review-link">
+            View <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      {% empty %}
+      <div class="pr-empty">
+        <div class="pr-empty-icon"><i class="fas fa-pen-alt"></i></div>
+        <h3>No reviews yet</h3>
+        <p>Share your college experience with thousands of students!</p>
+        <a href="{% url 'review_page' %}" class="btn-pr-primary">
+          <i class="fas fa-plus"></i> Write First Review
+        </a>
+      </div>
+      {% endfor %}
+
+      {% if reviews_count > 3 %}
+      <a href="{% url 'my_reviews' %}" class="pr-see-all">
+        See all {{ reviews_count }} reviews <i class="fas fa-arrow-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── PANEL: EDIT PROFILE ──────────────── -->
+  <div class="pr-panel" id="panel-edit">
+    <div class="pr-section-title">
+      <i class="fas fa-sliders-h"></i> Update Your Profile
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
+      {% csrf_token %}
+
+      <!-- Photo upload zone -->
+      <div class="pr-field full" style="margin-bottom:24px;">
+        <label class="pr-label">Profile Photo</label>
+        <label for="id_profile_picture" class="pr-photo-zone" id="photoZone">
+          <div class="pr-photo-preview" id="photoPreview">
+            {% if user_profile.profile_picture %}
+              <img src="{{ user_profile.profile_picture.url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+            {% else %}
+              {{ user.username|make_list|first|upper }}
+            {% endif %}
+          </div>
+          <div class="pr-photo-text">
+            <strong id="photoZoneTitle">Click to upload a new photo</strong>
+            <span>JPG, PNG, or GIF · Max 5 MB</span>
+          </div>
+        </label>
+        <!-- Hidden file input from form -->
+        <div style="display:none;">{{ profile_form.profile_picture }}</div>
+      </div>
+
+      <div class="pr-form-grid">
+        <!-- Username -->
+        <div class="pr-field full" style="grid-column: span 2;">
+          <label class="pr-label" for="{{ user_form.username.id_for_label }}">Username</label>
+          <input class="pr-input {% if user_form.username.errors %}error{% endif %}"
+                 type="text" name="username" id="{{ user_form.username.id_for_label }}"
+                 value="{{ user_form.username.value|default:'' }}" placeholder="e.g. jdoe">
+          {% if user_form.username.errors %}
+          <span class="pr-input-err"><i class="fas fa-exclamation-circle me-1"></i>{{ user_form.username.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <!-- First Name -->
+        <div class="pr-field">
+          <label class="pr-label" for="{{ user_form.first_name.id_for_label }}">First Name</label>
+          <input class="pr-input {% if user_form.first_name.errors %}error{% endif %}"
+                 type="text" name="first_name" id="{{ user_form.first_name.id_for_label }}"
+                 value="{{ user_form.first_name.value|default:'' }}" placeholder="e.g. Saritha">
+          {% if user_form.first_name.errors %}
+          <span class="pr-input-err"><i class="fas fa-exclamation-circle me-1"></i>{{ user_form.first_name.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Last Name -->
+        <div class="pr-field">
+          <label class="pr-label" for="{{ user_form.last_name.id_for_label }}">Last Name</label>
+          <input class="pr-input {% if user_form.last_name.errors %}error{% endif %}"
+                 type="text" name="last_name" id="{{ user_form.last_name.id_for_label }}"
+                 value="{{ user_form.last_name.value|default:'' }}" placeholder="e.g. Kumar">
+          {% if user_form.last_name.errors %}
+          <span class="pr-input-err"><i class="fas fa-exclamation-circle me-1"></i>{{ user_form.last_name.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Email -->
+        <div class="pr-field full">
+          <label class="pr-label" for="{{ user_form.email.id_for_label }}">Email Address</label>
+          <input class="pr-input {% if user_form.email.errors %}error{% endif %}"
+                 type="email" name="email" id="{{ user_form.email.id_for_label }}"
+                 value="{{ user_form.email.value|default:'' }}" placeholder="you@example.com">
+          {% if user_form.email.errors %}
+          <span class="pr-input-err"><i class="fas fa-exclamation-circle me-1"></i>{{ user_form.email.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <!-- Phone -->
+        <div class="pr-field">
+          <label class="pr-label" for="{{ profile_form.phone.id_for_label }}">Phone Number</label>
+          <input class="pr-input"
+                 type="text" name="phone" id="{{ profile_form.phone.id_for_label }}"
+                 value="{{ profile_form.phone.value|default:'' }}" placeholder="e.g. +1 234 567 890">
+        </div>
+
+        <!-- Location -->
+        <div class="pr-field">
+          <label class="pr-label" for="{{ profile_form.location.id_for_label }}">Location</label>
+          <input class="pr-input"
+                 type="text" name="location" id="{{ profile_form.location.id_for_label }}"
+                 value="{{ profile_form.location.value|default:'' }}" placeholder="City, Country">
+        </div>
+
+        <!-- Birth Date -->
+        <div class="pr-field">
+          <label class="pr-label" for="{{ profile_form.birth_date.id_for_label }}">Date of Birth</label>
+          <input class="pr-input"
+                 type="date" name="birth_date" id="{{ profile_form.birth_date.id_for_label }}"
+                 value="{{ profile_form.birth_date.value|default:'' }}">
+        </div>
+
+        <!-- Bio -->
+        <div class="pr-field full">
+          <label class="pr-label" for="{{ profile_form.bio.id_for_label }}">Bio</label>
+          <textarea class="pr-textarea {% if profile_form.bio.errors %}error{% endif %}"
+                    name="bio" id="{{ profile_form.bio.id_for_label }}"
+                    placeholder="Tell the community about yourself...">{{ profile_form.bio.value|default:'' }}</textarea>
+          {% if profile_form.bio.errors %}
+          <span class="pr-input-err">{{ profile_form.bio.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pr-form-actions">
+        <button type="submit" class="btn-pr-primary" id="saveBtn">
+          <i class="fas fa-save"></i> <span id="saveBtnText">Save Changes</span>
+        </button>
+        <button type="button" class="btn-pr-ghost" onclick="switchTab('activity')">
+          Cancel
+        </button>
+        <a href="{% url 'settings' %}" class="btn-pr-ghost" style="margin-left:auto;">
+          <i class="fas fa-lock"></i> Change Password
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div><!-- /pr-card -->
+</div><!-- /pr-wrapper -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ─────────────────────────────────────────
+   TAB SWITCHER
+───────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.pr-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.pr-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+/* ─────────────────────────────────────────
+   SKELETON → CONTENT FADE
+───────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', function () {
+  setTimeout(function () {
+    const sk = document.getElementById('skeletonLoader');
+    const ac = document.getElementById('activityContent');
+    if (sk) sk.style.display = 'none';
+    if (ac) ac.style.display = 'block';
+  }, 700);
+});
+
+/* ─────────────────────────────────────────
+   ANIMATED STAT COUNTERS
+───────────────────────────────────────── */
+function animateCounter(el, target) {
+  let start = 0;
+  const duration = 1200;
+  const step = Math.ceil(target / (duration / 16));
+  if (target === 0) { el.textContent = '0'; return; }
+  const timer = setInterval(function () {
+    start = Math.min(start + step, target);
+    el.textContent = start.toLocaleString();
+    if (start >= target) clearInterval(timer);
+  }, 16);
+}
+
+const observer = new IntersectionObserver(function (entries) {
+  entries.forEach(function (entry) {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.pr-stat-num[data-target]').forEach(function (el) {
+        animateCounter(el, parseInt(el.dataset.target));
+      });
+      observer.disconnect();
+    }
+  });
+}, { threshold: 0.3 });
+
+const statsEl = document.querySelector('.pr-stats');
+if (statsEl) observer.observe(statsEl);
+
+/* ─────────────────────────────────────────
+   PROFILE COMPLETION INDICATOR
+───────────────────────────────────────── */
+(function () {
+  const checks = [
+    "{{ user.first_name|default:'' }}" !== '',
+    "{{ user.email }}" !== '',
+    "{{ user_profile.bio|default:'' }}" !== '',
+    "{{ user_profile.location|default:'' }}" !== '',
+    {% if user_profile.profile_picture %}true{% else %}false{% endif %},
+    "{{ user_profile.birth_date|default:'' }}" !== '',
+  ];
+  const pct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  setTimeout(function () {
+    const fill = document.getElementById('completionFill');
+    const label = document.getElementById('completionLabel');
+    if (fill) fill.style.width = pct + '%';
+    if (label) label.textContent = pct + '% complete';
+  }, 400);
+})();
+
+/* ─────────────────────────────────────────
+   AVATAR LIVE PREVIEW + DYNAMIC UPLOAD
+───────────────────────────────────────── */
+var picInput = document.getElementById('id_profile_picture');
+if (picInput) {
+  picInput.addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+
+    // 1) Immediate local preview via FileReader (shows before server responds)
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var src = e.target.result;
+      var preview = document.getElementById('photoPreview');
+      if (preview) preview.innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+      var big = document.getElementById('bigAvatar');
+      if (big) big.innerHTML = '<img src="' + src + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">';
+    };
+    reader.readAsDataURL(file);
+
+    // 2) Show uploading state
+    var titleEl = document.getElementById('photoZoneTitle');
+    if (titleEl) titleEl.textContent = 'Uploading…';
+
+    // 3) Send file to server
+    var fd = new FormData();
+    fd.append('profile_picture', file);
+    fd.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+    fetch(window.location.href, {
+      method: 'POST',
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var realUrl = data.photo_url;
+
+        // Update title
+        if (titleEl) titleEl.textContent = 'Photo updated!';
+
+        // Update all navbar profile circles (the trigger button circle)
+        document.querySelectorAll('.profile-circle').forEach(function(circle) {
+          circle.innerHTML = '<img src="' + realUrl + '" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+        });
+
+        // Update the dropdown mini-avatar (the div right before name/email in dropdown)
+        document.querySelectorAll('#navbarDropdown + ul .d-flex .me-3').forEach(function(el) {
+          el.innerHTML = '<img src="' + realUrl + '" alt="Profile" style="width:100%;height:100%;object-fit:cover;">';
+        });
+
+        // Update big avatar on profile page with real URL
+        var big = document.getElementById('bigAvatar');
+        if (big) big.innerHTML = '<img src="' + realUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">';
+
+        // Update photo zone preview with real URL
+        var preview = document.getElementById('photoPreview');
+        if (preview) preview.innerHTML = '<img src="' + realUrl + '" style="width:100%;height:100%;object-fit:cover;" alt="">';
+
+        // Show success toast
+        var toastContainer = document.getElementById('toastContainer');
+        if (toastContainer) {
+          var toast = document.createElement('div');
+          toast.className = 'pr-toast success';
+          toast.innerHTML = '<span class="pr-toast-icon"><i class="fas fa-check-circle"></i></span><span>Profile photo updated!</span><button class="pr-toast-close" onclick="closeToast(this)">✕</button>';
+          toastContainer.appendChild(toast);
+          setTimeout(function() { if (toast.isConnected) closeToast(toast.querySelector('.pr-toast-close')); }, 4500);
+        }
+      } else {
+        if (titleEl) titleEl.textContent = data.errors || 'Upload failed.';
+
+        // Show error toast
+        var toastContainer = document.getElementById('toastContainer');
+        if (toastContainer) {
+          var toast = document.createElement('div');
+          toast.className = 'pr-toast error';
+          toast.innerHTML = '<span class="pr-toast-icon"><i class="fas fa-exclamation-circle"></i></span><span>' + (data.errors || 'Upload failed.') + '</span><button class="pr-toast-close" onclick="closeToast(this)">✕</button>';
+          toastContainer.appendChild(toast);
+          setTimeout(function() { if (toast.isConnected) closeToast(toast.querySelector('.pr-toast-close')); }, 6000);
+        }
+      }
+    })
+    .catch(function() {
+      if (titleEl) titleEl.textContent = 'Upload failed. Please try again.';
+    });
+  });
+}
+
+/* ─────────────────────────────────────────
+   SAVE BUTTON LOADING STATE
+───────────────────────────────────────── */
+var profileForm = document.getElementById('profileForm');
+if (profileForm) {
+  profileForm.addEventListener('submit', function () {
+    var btn = document.getElementById('saveBtn');
+    var txt = document.getElementById('saveBtnText');
+    if (btn && txt) {
+      txt.textContent = 'Saving...';
+      btn.disabled = true;
+      btn.style.opacity = '.75';
+    }
+  });
+}
+
+/* ─────────────────────────────────────────
+   TOAST AUTO-DISMISS
+───────────────────────────────────────── */
+function closeToast(btn) {
+  var toast = btn.closest('.pr-toast');
+  toast.style.animation = 'toastOut .3s ease forwards';
+  setTimeout(function () { toast.remove(); }, 300);
+}
+document.querySelectorAll('.pr-toast').forEach(function (t) {
+  setTimeout(function () {
+    if (t.isConnected) closeToast(t.querySelector('.pr-toast-close'));
+  }, 4500);
+});
+
+/* ─────────────────────────────────────────
+   DARK MODE TOGGLE
+───────────────────────────────────────── */
+function toggleDark() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+  var icon = document.getElementById('darkIcon');
+  var btn  = document.getElementById('darkToggleBtn');
+  if (isDark) {
+    icon.className = 'fas fa-moon'; btn.innerHTML = '<i class="fas fa-moon" id="darkIcon"></i> Dark Mode';
+  } else {
+    icon.className = 'fas fa-sun'; btn.innerHTML = '<i class="fas fa-sun" id="darkIcon"></i> Light Mode';
+  }
+  localStorage.setItem('prDark', isDark ? '' : '1');
+}
+// Restore dark mode preference
+if (localStorage.getItem('prDark') === '1') toggleDark();
+
+/* ─────────────────────────────────────────
+   AUTO-SWITCH TO EDIT IF FORM ERRORS
+───────────────────────────────────────── */
+{% if user_form.errors or profile_form.errors %}
+switchTab('edit');
+{% endif %}
+</script>
+{% endblock %}

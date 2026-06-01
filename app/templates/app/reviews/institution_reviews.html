@@ -1,0 +1,126 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}{{ institution.name }} - Reviews - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rating-stars {
+        color: #ffc107;
+    }
+
+    .review-card {
+        border-left: 4px solid var(--primary-color);
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-left-width: 4px;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+    }
+
+    h1,
+    h2,
+    h3,
+    h5 {
+        color: var(--secondary-color);
+    }
+
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Institution Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>{{ institution.name }}</h1>
+            <p class="text-muted">{{ institution.city }}</p>
+
+            <!-- Rating Summary -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h2>{{ avg_rating }}/5</h2>
+                            <div class="rating-stars">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= avg_rating %} <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                            </div>
+                            <p class="text-muted">{{ total_reviews }} reviews</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="row">
+        <div class="col-12">
+            <h3>Student Reviews</h3>
+
+            {% if reviews %}
+            {% for review in reviews %}
+            <div class="card mb-3 review-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ review.user.username }}</h5>
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                            {% if forloop.counter <= review.overall_rating %} <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                                <span class="ms-2" style="color: var(--text-color);">{{ review.overall_rating
+                                    }}/5</span>
+                        </div>
+                    </div>
+                    <p class="card-text" style="color: var(--text-color);">{{ review.overall_review }}</p>
+                    <small class="text-muted">Posted on {{ review.created_at|date:"F j, Y" }}</small>
+
+                    <!-- Review Details -->
+                    {% if review.education_system %}
+                    <div class="mt-2 text-dark">
+                        <strong style="color: var(--secondary-color);">Education System:</strong>
+                        <p class="mb-1" style="color: var(--text-color);">{{ review.education_system }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if review.infrastructure %}
+                    <div class="mt-2 text-dark">
+                        <strong style="color: var(--secondary-color);">Infrastructure:</strong>
+                        <p class="mb-1" style="color: var(--text-color);">{{ review.infrastructure }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert alert-info">
+                <p>No reviews yet for this institution. Be the first to share your experience!</p>
+                <a href="{% url 'review_form' %}" class="btn btn-primary">Write a Review</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'index' %}" class="btn btn-secondary">Back to Home</a>
+            <a href="{% url 'review_form' %}" class="btn btn-primary">Write a Review</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

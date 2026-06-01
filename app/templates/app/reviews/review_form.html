@@ -1,0 +1,480 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Write a Review - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .container-custom {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        min-height: 60vh;
+    }
+
+    .review-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        /* Dark mode shadow to consider */
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--secondary-color);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--secondary-color);
+        font-size: 0.95rem;
+    }
+
+    .form-control,
+    .form-select {
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+    }
+
+    .form-control:focus {
+        border-color: #a8a8a8;
+        /* Could use primary color */
+        box-shadow: none;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .required-asterisk {
+        color: #ed4956;
+        margin-left: 2px;
+    }
+
+    /* Star Rating Styles */
+    .rating-stars {
+        font-size: 1.5rem;
+        color: #dbdbdb;
+        cursor: pointer;
+        display: inline-flex;
+    }
+
+    .rating-stars .fas.fa-star {
+        color: #ffc107;
+    }
+
+    .rating-stars i {
+        transition: transform 0.2s;
+        margin-right: 5px;
+    }
+
+    .rating-stars i:hover {
+        transform: scale(1.2);
+    }
+
+    [data-theme="dark"] .rating-stars {
+        color: #555;
+    }
+
+    .rating-value-display {
+        font-weight: 700;
+        margin-left: 10px;
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+
+    .btn-submit {
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        width: 100%;
+        transition: background-color 0.2s;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background-color: var(--primary-dark);
+        color: white;
+    }
+
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: transform 0.2s;
+    }
+
+    .back-btn:hover {
+        transform: translateX(-5px);
+        color: var(--secondary-color);
+    }
+
+    .profile-dropdown .dropdown-toggle::after {
+        display: none;
+    }
+
+    .alert-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        width: 350px;
+    }
+
+    .accordion-button {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: var(--input-bg);
+        color: var(--primary-color);
+        box-shadow: none;
+    }
+
+    .accordion-item {
+        background-color: transparent;
+        border-color: var(--border-color);
+    }
+
+    .accordion-body {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+
+    .form-check-label {
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Alert Container -->
+<div class="alert-container" id="alertContainer">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Main Content -->
+<div class="container-custom">
+    <a href="{% url 'view_reviews' 'All' %}" class="back-btn">
+        <i class="fas fa-arrow-left me-2"></i> Back to All Reviews
+    </a>
+
+    <div class="review-card">
+        <div class="text-center mb-4">
+            <h2 class="mb-2" style="color: var(--secondary-color);">Write a Review</h2>
+            <p class="text-muted">Share your experience to help others.</p>
+        </div>
+
+        <form id="reviewForm" method="POST">
+            {% csrf_token %}
+
+            <!-- Hidden User & Meta Info -->
+            <input type="hidden" id="userName" name="user_name" value="{{ user.get_full_name|default:user.username }}">
+            <div id="loggedInUserName" style="display:none;">{{ user.get_full_name|default:user.username }}</div>
+
+            <!-- Basic Info -->
+            <div class="mb-4">
+                <h5 class="section-title">Basic Information</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="collegeName" class="form-label">College/Institute Name <span
+                                class="required-asterisk">*</span></label>
+                        <input type="text" class="form-control" id="collegeName" name="college_name" required
+                            placeholder="e.g. Anna University">
+                        <div class="text-danger small mt-1" id="collegeNameErrors"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mobileNumber" class="form-label">Mobile Number <span
+                                class="required-asterisk">*</span></label>
+                        <input type="tel" class="form-control" id="mobileNumber" name="mobile_number" required
+                            placeholder="Your contact number">
+                        <div class="text-danger small mt-1" id="mobileNumberErrors"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Rating & Review -->
+            <div class="mb-4">
+                <h5 class="section-title">Overall Experience</h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Overall Rating <span class="required-asterisk">*</span></label>
+                    <div class="d-flex align-items-center">
+                        <div class="rating-stars" id="overallRatingStars">
+                            <i class="fas fa-star" data-rating="1"></i>
+                            <i class="fas fa-star" data-rating="2"></i>
+                            <i class="fas fa-star" data-rating="3"></i>
+                            <i class="fas fa-star" data-rating="4"></i>
+                            <i class="fas fa-star" data-rating="5"></i>
+                        </div>
+                        <span class="rating-value-display" id="overallRatingValueDisplay"></span>
+                    </div>
+                    <input type="hidden" id="overallRating" name="overall_rating" required>
+                    <div class="text-danger small mt-1" id="overallRatingErrors"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="overallReview" class="form-label">Detailed Review <span
+                            class="required-asterisk">*</span></label>
+                    <textarea class="form-control" id="overallReview" name="overall_review" rows="4" required
+                        placeholder="Tell us about your overall experience..."></textarea>
+                    <div class="text-danger small mt-1" id="overallReviewErrors"></div>
+                </div>
+            </div>
+
+            <!-- Detailed Feedback (Collapsible Sections for cleaner look) -->
+            <h5 class="section-title mt-5">Detailed Feedback (Optional)</h5>
+
+            <div class="accordion" id="feedbackAccordion">
+
+                <!-- Academics -->
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed shadow-none ps-0" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#academicsCollapse">
+                            <i class="fas fa-book-open me-2 text-primary"></i> Academics & Staff
+                        </button>
+                    </h2>
+                    <div id="academicsCollapse" class="accordion-collapse collapse" data-bs-parent="#feedbackAccordion">
+                        <div class="accordion-body ps-0 pe-0">
+                            <div class="mb-3">
+                                <label class="form-label">Education System</label>
+                                <textarea class="form-control" name="education_system" rows="3"
+                                    placeholder="Curriculum, teaching quality..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Staff Review</label>
+                                <textarea class="form-control" name="staff_review" rows="3"
+                                    placeholder="Faculty behavior, helpfulness..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campus Life -->
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed shadow-none ps-0" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#campusCollapse">
+                            <i class="fas fa-university me-2 text-primary"></i> Campus & Infrastructure
+                        </button>
+                    </h2>
+                    <div id="campusCollapse" class="accordion-collapse collapse" data-bs-parent="#feedbackAccordion">
+                        <div class="accordion-body ps-0 pe-0">
+                            <div class="mb-3">
+                                <label class="form-label">Infrastructure</label>
+                                <textarea class="form-control" name="infrastructure_review" rows="3"
+                                    placeholder="Labs, library, wifi..."></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="canteenAvailable"
+                                            name="canteen_available">
+                                        <label class="form-check-label" for="canteenAvailable">Canteen
+                                            Available</label>
+                                    </div>
+                                    <textarea class="form-control mt-2" name="canteen_review" rows="2"
+                                        placeholder="Food quality..."></textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="hostelAvailable"
+                                            name="hostel_available">
+                                        <label class="form-check-label" for="hostelAvailable">Hostel
+                                            Available</label>
+                                    </div>
+                                    <textarea class="form-control mt-2" name="hostel_review" rows="2"
+                                        placeholder="Hostel facilities..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Placements & Fees -->
+                <div class="accordion-item border-0 border-bottom">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed shadow-none ps-0" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#careerCollapse">
+                            <i class="fas fa-briefcase me-2 text-primary"></i> Placements & Fees
+                        </button>
+                    </h2>
+                    <div id="careerCollapse" class="accordion-collapse collapse" data-bs-parent="#feedbackAccordion">
+                        <div class="accordion-body ps-0 pe-0">
+                            <div class="mb-3">
+                                <label class="form-label">Placement Review</label>
+                                <textarea class="form-control" name="placement_review" rows="3"
+                                    placeholder="Companies, packages..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Placement Rating (Optional)</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="rating-stars" id="placementRatingStars">
+                                        <i class="fas fa-star" data-rating="1"></i>
+                                        <i class="fas fa-star" data-rating="2"></i>
+                                        <i class="fas fa-star" data-rating="3"></i>
+                                        <i class="fas fa-star" data-rating="4"></i>
+                                        <i class="fas fa-star" data-rating="5"></i>
+                                    </div>
+                                    <span class="rating-value-display" id="placementRatingValue"></span>
+                                </div>
+                                <input type="hidden" id="placementRating" name="placement_rating">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fees Structure</label>
+                                <textarea class="form-control" name="fees_structure" rows="3"
+                                    placeholder="Affordability, hidden charges..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary btn-submit">
+                    <i class="fas fa-paper-plane me-2"></i> Submit Review
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Get CSRF token
+        function getCSRFToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+
+        // Initialize rating systems
+        initRatingSystem('overallRatingStars', 'overallRating', 'overallRatingValueDisplay');
+        initRatingSystem('placementRatingStars', 'placementRating', 'placementRatingValue');
+
+        function initRatingSystem(containerId, inputId, displayId) {
+            const container = document.getElementById(containerId);
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            const stars = container.querySelectorAll('.fa-star');
+            let currentRating = 0;
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function () {
+                    const rating = parseInt(this.dataset.rating);
+                    highlightStars(stars, rating);
+                });
+
+                star.addEventListener('click', function () {
+                    currentRating = parseInt(this.dataset.rating);
+                    input.value = currentRating;
+                    highlightStars(stars, currentRating);
+                    if (display) display.textContent = currentRating + '/5';
+                });
+            });
+
+            container.addEventListener('mouseleave', function () {
+                highlightStars(stars, currentRating);
+            });
+        }
+
+        function highlightStars(stars, rating) {
+            stars.forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.style.color = '#ffc107'; // yellow
+                    star.classList.replace('far', 'fas'); // solid
+                } else {
+                    // In dark mode, we might want a darker gray or same gray
+                    star.style.color = 'var(--text-muted, #dbdbdb)';
+                    if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                        // star.style.color = '#555'; // handled by css
+                    }
+                }
+            });
+        }
+
+        // Simplified Form Submission
+        document.getElementById('reviewForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            // Convert to JSON
+            const data = {};
+            formData.forEach((value, key) => {
+                // Checkboxes to boolean/int
+                if (key === 'canteen_available' || key === 'hostel_available') {
+                    data[key] = 1;
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            // Validation
+            if (!data.college_name || !data.mobile_number || !data.overall_rating || !data.overall_review) {
+                showAlert('Please fill in all required fields.', 'danger');
+                return;
+            }
+
+            // API Call
+            fetch('/api/submit-review/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Review submitted successfully!', 'success');
+                        window.location.href = data.redirect_url || "{% url 'view_reviews' 'All' %}";
+                    } else {
+                        showAlert(data.error || 'Submission failed.', 'danger');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showAlert('An error occurred.', 'danger');
+                });
+        });
+
+        function showAlert(msg, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+            container.appendChild(alert);
+            setTimeout(() => alert.remove(), 5000);
+        }
+    });
+</script>
+{% endblock %}

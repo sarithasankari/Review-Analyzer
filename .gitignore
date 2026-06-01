@@ -1,0 +1,59 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug / test scripts
+debug_*.py
+diagnose_*.py
+test_*.py
+check_db*.py
+fix_db.py
+list_reviews.py
+show_db_values.py
+debug_output.txt
+db_debug.txt
+db_output.txt
+reviews_output.txt
+reviews_utf8.txt
+test_page.html
+
+# Binary / DB files
+*.sqlite3
+college_reviews_db
+view1
+
+# Chrome download temp files
+*.crdownload
+
+# Project metadata file
+Django College Reviews
