@@ -64,9 +64,16 @@ class CollegeReview(models.Model):
             return 'Negative'
         return 'Neutral'
 
+from django.core.exceptions import ValidationError
+
+def validate_image_size(image):
+    limit_kb = 500
+    if image.size > limit_kb * 1024:
+        raise ValidationError(f"Image size must be less than {limit_kb} KB.")
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to='profile_images/', blank=True, null=True, max_length=500)
+    profile_picture = models.ImageField(upload_to='profile_images/', blank=True, null=True, max_length=500, validators=[validate_image_size])
     bio = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     location = models.CharField(max_length=100, blank=True, null=True)

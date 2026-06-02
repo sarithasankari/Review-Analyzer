@@ -712,7 +712,7 @@ body { font-family: 'Inter', sans-serif !important; background: var(--pr-body); 
           </div>
           <div class="pr-photo-text">
             <strong id="photoZoneTitle">Click to upload a new photo</strong>
-            <span>JPG, PNG, or GIF · Max 5 MB</span>
+            <span>JPG, PNG, or GIF · Max 500 KB</span>
           </div>
         </label>
         <!-- Hidden file input from form -->
@@ -900,6 +900,24 @@ if (picInput) {
   picInput.addEventListener('change', function () {
     var file = this.files[0];
     if (!file) return;
+
+    // Check size in KB (e.g., max 500 KB)
+    var maxKb = 500;
+    if (file.size > maxKb * 1024) {
+      var titleEl = document.getElementById('photoZoneTitle');
+      if (titleEl) titleEl.textContent = 'File too large! Max ' + maxKb + ' KB.';
+      
+      var toastContainer = document.getElementById('toastContainer');
+      if (toastContainer) {
+        var toast = document.createElement('div');
+        toast.className = 'pr-toast error';
+        toast.innerHTML = '<span class="pr-toast-icon"><i class="fas fa-exclamation-circle"></i></span><span>Image must be less than ' + maxKb + ' KB.</span><button class="pr-toast-close" onclick="closeToast(this)">✕</button>';
+        toastContainer.appendChild(toast);
+        setTimeout(function() { if (toast.isConnected) closeToast(toast.querySelector('.pr-toast-close')); }, 6000);
+      }
+      this.value = ''; // Clear the input
+      return;
+    }
 
     // 1) Immediate local preview via FileReader (shows before server responds)
     var reader = new FileReader();
