@@ -1,0 +1,755 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Account Settings - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Specific Settings Page Styles */
+
+    /* Main Container */
+    .settings-container {
+        flex: 1;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .page-title-wrapper {
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-weight: 800;
+        color: var(--secondary-color);
+        margin-bottom: 5px;
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    /* Settings Card Layout */
+    .settings-wrapper {
+        background: var(--card-bg);
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(0, 0, 0, 0.02);
+        min-height: 700px;
+    }
+
+    @media (min-width: 992px) {
+        .settings-wrapper {
+            flex-direction: row;
+        }
+
+        .settings-sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            border-right: 1px solid var(--border-color);
+        }
+    }
+
+    /* Sidebar Styling */
+    .settings-sidebar {
+        background: var(--card-bg);
+        padding: 30px;
+    }
+
+    .user-mini-profile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 30px;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+    }
+
+    .user-mini-avatar-wrapper {
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    .user-mini-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 2rem;
+        box-shadow: 0 8px 20px rgba(74, 110, 224, 0.25);
+        overflow: hidden;
+    }
+
+    .user-mini-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .verification-badge-mini {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: var(--success-color);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        border: 2px solid white;
+    }
+
+    .user-mini-info h6 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--secondary-color);
+        font-size: 1.1rem;
+    }
+
+    .user-mini-info span {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .nav-pills .nav-link {
+        color: var(--text-muted);
+        font-weight: 600;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        border: 1px solid transparent;
+    }
+
+    .nav-pills .nav-link i {
+        margin-right: 15px;
+        font-size: 1.2rem;
+        width: 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: rgba(74, 110, 224, 0.04);
+        color: var(--primary-color);
+        transform: translateX(5px);
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        box-shadow: 0 8px 20px rgba(74, 110, 224, 0.25);
+        border: none;
+    }
+
+    .nav-pills .nav-link.active i {
+        color: white;
+    }
+
+    .nav-link.text-danger {
+        color: var(--danger-color);
+        margin-top: 30px;
+        border: 1px solid rgba(231, 76, 60, 0.1);
+    }
+
+    .nav-link.text-danger:hover {
+        background-color: rgba(231, 76, 60, 0.05);
+        color: #c0392b;
+        border-color: rgba(231, 76, 60, 0.2);
+    }
+
+    /* Content Area Styling */
+    .settings-content-area {
+        padding: 50px;
+        flex-grow: 1;
+        background-color: var(--bg-color);
+    }
+
+    /* Specific override for card inner content */
+    .settings-content-area {
+        background-color: var(--card-bg);
+    }
+
+    .section-header {
+        margin-bottom: 40px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 20px;
+    }
+
+    .section-header h3 {
+        font-weight: 800;
+        color: var(--secondary-color);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .section-header h3 i {
+        margin-right: 15px;
+        color: var(--primary-color);
+    }
+
+    .section-header p {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        margin: 0;
+    }
+
+    /* Form Styling */
+    .form-label {
+        font-weight: 600;
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        border: 2px solid var(--input-border);
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background-color: var(--input-bg);
+        color: var(--secondary-color);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(74, 110, 224, 0.1);
+        background-color: var(--input-bg);
+    }
+
+    .form-control::placeholder {
+        color: #b0b8c1;
+    }
+
+    .btn-update {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border: none;
+        padding: 14px 40px;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px rgba(74, 110, 224, 0.2);
+    }
+
+    .btn-update:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(74, 110, 224, 0.3);
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: #f1f3f5;
+        color: var(--text-muted);
+        border: none;
+        padding: 14px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-right: 15px;
+        transition: all 0.3s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #e9ecef;
+        color: var(--secondary-color);
+    }
+
+    /* Profile Avatar Large */
+    .profile-avatar-large-wrapper {
+        position: relative;
+        width: 130px;
+        height: 130px;
+        margin: 0 auto 20px;
+    }
+
+    .profile-avatar-large {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 15px 30px rgba(106, 17, 203, 0.25);
+        border: 5px solid white;
+        overflow: hidden;
+    }
+
+    .profile-avatar-large img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-upload-btn {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: white;
+        color: var(--secondary-color);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .avatar-upload-btn:hover {
+        transform: scale(1.1);
+        color: var(--primary-color);
+    }
+
+    /* Password Strength */
+    .password-strength-meter {
+        height: 6px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0;
+        transition: width 0.4s ease, background-color 0.4s ease;
+    }
+
+    /* Verification Card */
+    .verification-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .verification-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+    }
+
+    .verification-card.verified::before {
+        background: var(--success-color);
+    }
+
+    .verification-card.unverified::before {
+        background: var(--warning-color);
+    }
+
+    .verification-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .text-success {
+        color: var(--success-color) !important;
+    }
+
+    .text-warning {
+        color: var(--warning-color) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="page-title-wrapper">
+        <h2 class="page-title">Account Settings</h2>
+        <p class="page-subtitle">Manage your profile information and account security</p>
+    </div>
+
+    <div class="settings-wrapper">
+        <!-- Sidebar -->
+        <div class="settings-sidebar">
+            <div class="user-mini-profile">
+                <div class="user-mini-avatar-wrapper">
+                    <div class="user-mini-avatar">
+                        {% if user.userprofile.profile_picture %}
+                        <img src="{{ user.userprofile.profile_picture.url }}" alt="Profile">
+                        {% else %}
+                        {{ user.email|make_list|first|upper }}
+                        {% endif %}
+                    </div>
+                    {% if user.userprofile.is_verified %}
+                    <div class="verification-badge-mini" title="Verified Account">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="user-mini-info">
+                    <h6>{{ user.first_name }} {{ user.last_name }}</h6>
+                    <span>{{ user.email }}</span>
+                </div>
+            </div>
+
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link active" id="v-pills-profile-tab" data-bs-toggle="pill"
+                    data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile"
+                    aria-selected="true">
+                    <i class="far fa-user-circle"></i> Personal Info
+                </button>
+                <button class="nav-link" id="v-pills-security-tab" data-bs-toggle="pill"
+                    data-bs-target="#v-pills-security" type="button" role="tab" aria-controls="v-pills-security"
+                    aria-selected="false">
+                    <i class="fas fa-shield-alt"></i> Login & Security
+                </button>
+                <button class="nav-link" id="v-pills-verification-tab" data-bs-toggle="pill"
+                    data-bs-target="#v-pills-verification" type="button" role="tab" aria-controls="v-pills-verification"
+                    aria-selected="false">
+                    <i class="fas fa-certificate"></i> Account Verification
+                </button>
+
+                <!-- Theme Toggle -->
+                <div class="px-3 py-2 d-flex align-items-center text-muted fw-bold">
+                    <i class="fas fa-moon me-3" style="width: 25px; text-align: center; font-size: 1.2rem;"></i>
+                    <span>Dark Mode</span>
+                    <div class="form-check form-switch ms-auto">
+                        <input class="form-check-input" type="checkbox" id="themeToggle" style="cursor: pointer;">
+                    </div>
+                </div>
+
+                <button class="nav-link text-danger" onclick="window.location.href='{% url 'logout' %}';">
+                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="settings-content-area">
+            <div class="tab-content" id="v-pills-tabContent">
+                <!-- Profile Tab -->
+                <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel"
+                    aria-labelledby="v-pills-profile-tab">
+                    <div class="section-header">
+                        <h3><i class="far fa-id-card"></i> Personal Information</h3>
+                        <p>Update your photo and personal details here.</p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_profile" value="1">
+
+                        <div class="profile-avatar-large-wrapper">
+                            <div class="profile-avatar-large">
+                                {% if user.userprofile.profile_picture %}
+                                <img id="profile-preview" src="{{ user.userprofile.profile_picture.url }}"
+                                    alt="Profile">
+                                {% else %}
+                                <img id="profile-preview" src="" alt="Profile" style="display: none;">
+                                <div id="initials-avatar"
+                                    style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                    {{ user.email|make_list|first|upper }}</div>
+                                {% endif %}
+                            </div>
+                            <label for="id_profile_picture" class="avatar-upload-btn">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" name="profile_picture" id="id_profile_picture" style="display: none;"
+                                accept="image/*">
+                        </div>
+
+                        <p id="save-prompt" class="text-center text-success fw-bold mb-4" style="display: none;">
+                            <i class="fas fa-info-circle me-1"></i> Click 'Save Changes' to apply new photo
+                        </p>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="id_first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="id_first_name" name="first_name"
+                                    value="{{ user.first_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="id_last_name" name="last_name"
+                                    value="{{ user.last_name }}">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="id_email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="id_email" name="email"
+                                    value="{{ user.email }}" readonly
+                                    style="background-color: var(--border-color); cursor: not-allowed;">
+                                <div class="form-text text-muted">Email cannot be changed. Contact support for
+                                    assistance.
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="id_bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="id_bio" name="bio" rows="3"
+                                    placeholder="Tell us about yourself...">{{ user.userprofile.bio }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="id_location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="id_location" name="location"
+                                    value="{{ user.userprofile.location }}" placeholder="City, Country">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="id_birth_date" class="form-label">Birth Date</label>
+                                <input type="date" class="form-control" id="id_birth_date" name="birth_date"
+                                    value="{{ user.userprofile.birth_date|date:'Y-m-d' }}">
+                            </div>
+                        </div>
+
+                        <div class="mt-5 d-flex justify-content-end">
+                            <button type="button" class="btn btn-cancel"
+                                onclick="window.location.reload();">Cancel</button>
+                            <button type="submit" class="btn btn-update">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="v-pills-security" role="tabpanel" aria-labelledby="v-pills-security-tab">
+                    <div class="section-header">
+                        <h3><i class="fas fa-lock"></i> Login & Security</h3>
+                        <p>Manage your password and security preferences.</p>
+                    </div>
+
+                    <div class="alert alert-warning border-0 d-flex align-items-center mb-4">
+                        <i class="fas fa-shield-alt fa-2x me-3 opacity-50"></i>
+                        <div>
+                            <h6 class="fw-bold mb-1">Security Recommendations</h6>
+                            <p class="mb-0 small">Use a strong password with at least 8 characters, including
+                                symbols and numbers.</p>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="change_password" value="1">
+
+                        <div class="mb-4">
+                            {% if password_form.errors %}
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                    {% for field in password_form %}
+                                        {% for error in field.errors %}
+                                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in password_form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            <label for="old_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="old_password" name="old_password"
+                                required>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-6">
+                                <label for="new_password1" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="new_password1" name="new_password1"
+                                    required>
+                                <div class="password-strength-meter">
+                                    <div class="password-strength-bar" id="password-strength-bar"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">Strength:</small>
+                                    <small id="password-strength-text" class="fw-bold">Weak</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="new_password2" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="new_password2" name="new_password2"
+                                    required>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-2"></i> Password should be at least 8 characters long and
+                            contain varied characters.
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button type="reset" class="btn btn-cancel">Reset</button>
+                            <button type="submit" class="btn btn-update">Update Password</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Verification Tab -->
+                <div class="tab-pane fade" id="v-pills-verification" role="tabpanel"
+                    aria-labelledby="v-pills-verification-tab">
+                    <div class="section-header">
+                        <h3><i class="fas fa-certificate"></i> Account Verification</h3>
+                        <p>Verify your identity to get the verified badge and exclusive features.</p>
+                    </div>
+
+                    <div
+                        class="verification-card {% if user.userprofile.is_verified %}verified{% else %}unverified{% endif %}">
+                        <div
+                            class="verification-icon {% if user.userprofile.is_verified %}text-success{% else %}text-warning{% endif %}">
+                            {% if user.userprofile.is_verified %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                            {% endif %}
+                        </div>
+
+                        <h4 class="fw-bold mb-3">
+                            {% if user.userprofile.is_verified %}
+                            Your account is Verified!
+                            {% else %}
+                            Your account is Not Verified
+                            {% endif %}
+                        </h4>
+
+                        <p class="text-muted mb-4 px-lg-5">
+                            {% if user.userprofile.is_verified %}
+                            Congratulations! You have successfully verified your identity. You now have a verified badge
+                            on your profile and full access to all platform features.
+                            {% else %}
+                            Verify your account to build trust in the community. Verified users get a badge on their
+                            profile and their reviews are highlighted.
+                            {% endif %}
+                        </p>
+
+                        {% if not user.userprofile.is_verified %}
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="request_verification" value="1">
+                            <button type="submit" class="btn btn-update">
+                                <i class="fas fa-check-double me-2"></i> Verify Account Now
+                            </button>
+                        </form>
+                        {% else %}
+                        <button class="btn btn-success disabled" disabled>
+                            <i class="fas fa-check me-2"></i> Verified
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-switch tabs if there are form errors
+        {% if password_form.errors %}
+            var securityTab = new bootstrap.Tab(document.querySelector('#v-pills-security-tab'));
+            securityTab.show();
+        {% elif user_form.errors or profile_form.errors %}
+            var profileTab = new bootstrap.Tab(document.querySelector('#v-pills-profile-tab'));
+            profileTab.show();
+        {% endif %}
+        
+        // Profile Picture Preview
+        var profileInput = document.getElementById('id_profile_picture');
+        if (profileInput) {
+            profileInput.onchange = function (evt) {
+                var tgt = evt.target || window.event.srcElement,
+                    files = tgt.files;
+
+                if (FileReader && files && files.length) {
+                    var fr = new FileReader();
+                    fr.onload = function () {
+                        var previewImg = document.getElementById('profile-preview');
+                        var initialsDiv = document.getElementById('initials-avatar');
+
+                        if (previewImg) {
+                            previewImg.src = fr.result;
+                            previewImg.style.display = 'block';
+                        }
+
+                        if (initialsDiv) {
+                            initialsDiv.style.display = 'none';
+                        }
+
+                        // Show save prompt
+                        var savePrompt = document.getElementById('save-prompt');
+                        if (savePrompt) {
+                            savePrompt.style.display = 'block';
+                        }
+                    }
+                    fr.readAsDataURL(files[0]);
+                }
+            }
+        }
+
+        // Password Strength Meter
+        const newPasswordInput = document.querySelector('input[name="new_password1"]');
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+
+        if (newPasswordInput && strengthBar) {
+            newPasswordInput.addEventListener('input', function () {
+                const password = this.value;
+                let strength = 0;
+
+                if (password.length > 0) strength += 10;
+                if (password.length >= 8) strength += 20;
+                if (/[A-Z]/.test(password)) strength += 20;
+                if (/[0-9]/.test(password)) strength += 20;
+                if (/[^A-Za-z0-9]/.test(password)) strength += 30;
+
+                // Cap at 100
+                strength = Math.min(100, strength);
+
+                strengthBar.style.width = strength + '%';
+
+                if (strength < 30) {
+                    strengthBar.style.backgroundColor = '#dc3545'; // Red
+                    strengthText.textContent = 'Weak';
+                    strengthText.style.color = '#dc3545';
+                } else if (strength < 70) {
+                    strengthBar.style.backgroundColor = '#ffc107'; // Yellow
+                    strengthText.textContent = 'Medium';
+                    strengthText.style.color = '#ffc107';
+                } else {
+                    strengthBar.style.backgroundColor = '#28a745'; // Green
+                    strengthText.textContent = 'Strong';
+                    strengthText.style.color = '#28a745';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

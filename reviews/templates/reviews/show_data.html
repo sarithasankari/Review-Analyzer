@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College Reviews Data</title>
+    <style>
+        .review-card {
+            border: 1px solid #ddd;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .field {
+            margin: 5px 0;
+        }
+        .field-label {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>College Reviews - Detailed View ({{ reviews.count }} records)</h1>
+    
+    {% if reviews %}
+        {% for review in reviews %}
+        <div class="review-card">
+            <h3>Review #{{ review.id }} - {{ review.college_name }}</h3>
+            
+            <div class="field">
+                <span class="field-label">User:</span> {{ review.user_name }}
+            </div>
+            <div class="field">
+                <span class="field-label">Mobile:</span> {{ review.mobile_number }}
+            </div>
+            <div class="field">
+                <span class="field-label">Education System:</span> {{ review.education_system }}
+            </div>
+            <div class="field">
+                <span class="field-label">Staff Review:</span> {{ review.staff_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Practical Experience:</span> {{ review.practical_experience }}
+            </div>
+            <div class="field">
+                <span class="field-label">Fees Structure:</span> {{ review.fees_structure }}
+            </div>
+            <div class="field">
+                <span class="field-label">Management Review:</span> {{ review.management_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Sports & Cultural:</span> {{ review.sports_cultural }}
+            </div>
+            <div class="field">
+                <span class="field-label">Placement Review:</span> {{ review.placement_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Placement Rating:</span> {{ review.placement_rating }}
+            </div>
+            <div class="field">
+                <span class="field-label">Travel Expense:</span> {{ review.travel_expense }}
+            </div>
+            <div class="field">
+                <span class="field-label">Entrepreneurship Support:</span> {{ review.entrepreneurship_support }}
+            </div>
+            <div class="field">
+                <span class="field-label">Canteen Available:</span> {{ review.canteen_available }}
+            </div>
+            <div class="field">
+                <span class="field-label">Canteen Review:</span> {{ review.canteen_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Hostel Available:</span> {{ review.hostel_available }}
+            </div>
+            <div class="field">
+                <span class="field-label">Hostel Review:</span> {{ review.hostel_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Infrastructure Review:</span> {{ review.infrastructure_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Security Review:</span> {{ review.security_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Overall Rating:</span> {{ review.overall_rating }}/5
+            </div>
+            <div class="field">
+                <span class="field-label">Overall Review:</span> {{ review.overall_review }}
+            </div>
+            <div class="field">
+                <span class="field-label">Submitted:</span> {{ review.created_at }}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No reviews found.</p>
+    {% endif %}
+    
+    <br>
+    <a href="/review-form/">Submit New Review</a> |
+    <a href="/view-data/">Table View</a> |
+    <a href="/all-data/">JSON View</a>
+</body>
+</html>

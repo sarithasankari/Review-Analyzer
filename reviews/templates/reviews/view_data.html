@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All College Reviews</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>All College Reviews ({{ reviews.count }} records)</h1>
+    
+    {% if reviews %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>College Name</th>
+                    <th>User Name</th>
+                    <th>Mobile</th>
+                    <th>Education System</th>
+                    <th>Staff Review</th>
+                    <th>Practical Exp</th>
+                    <th>Fees Structure</th>
+                    <th>Management</th>
+                    <th>Sports & Cultural</th>
+                    <th>Placement Review</th>
+                    <th>Placement Rating</th>
+                    <th>Travel Expense</th>
+                    <th>Entrepreneurship</th>
+                    <th>Canteen Available</th>
+                    <th>Canteen Review</th>
+                    <th>Hostel Available</th>
+                    <th>Hostel Review</th>
+                    <th>Infrastructure</th>
+                    <th>Security</th>
+                    <th>Overall Rating</th>
+                    <th>Overall Review</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review.id }}</td>
+                    <td>{{ review.college_name }}</td>
+                    <td>{{ review.user_name }}</td>
+                    <td>{{ review.mobile_number }}</td>
+                    <td>{{ review.education_system }}</td>
+                    <td>{{ review.staff_review }}</td>
+                    <td>{{ review.practical_experience }}</td>
+                    <td>{{ review.fees_structure }}</td>
+                    <td>{{ review.management_review }}</td>
+                    <td>{{ review.sports_cultural }}</td>
+                    <td>{{ review.placement_review }}</td>
+                    <td>{{ review.placement_rating }}</td>
+                    <td>{{ review.travel_expense }}</td>
+                    <td>{{ review.entrepreneurship_support }}</td>
+                    <td>{{ review.canteen_available }}</td>
+                    <td>{{ review.canteen_review }}</td>
+                    <td>{{ review.hostel_available }}</td>
+                    <td>{{ review.hostel_review }}</td>
+                    <td>{{ review.infrastructure_review }}</td>
+                    <td>{{ review.security_review }}</td>
+                    <td>{{ review.overall_rating }}</td>
+                    <td>{{ review.overall_review }}</td>
+                    <td>{{ review.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No reviews found.</p>
+    {% endif %}
+    
+    <br>
+    <a href="/review-form/">Submit New Review</a> |
+    <a href="/all-data/">View JSON Data</a> |
+    <a href="/export-data/">Export Data</a>
+</body>
+</html>

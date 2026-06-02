@@ -1,0 +1,23 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Review Submitted - EduReview{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-success d-flex align-items-center" role="alert"
+                style="border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="flex-grow-1">
+                    <h4 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Thank You!</h4>
+                    <p>Your review has been submitted successfully.</p>
+                    <hr>
+                    <a href="{% url 'index' %}" class="btn btn-success">Return to Home</a>
+                    <a href="{% url 'view_reviews' 'All' %}" class="btn btn-outline-success ms-2">View Reviews</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

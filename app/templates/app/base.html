@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduReview{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4a6ee0;
+            --primary-dark: #3a5ed0;
+            --secondary-color: #2c3e50;
+            --accent-color: #00d2ff;
+            --bg-color: #f8f9fa;
+            --text-color: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --sidebar-width: 280px;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --input-bg: #ffffff;
+            --input-border: #e0e6ed;
+            --navbar-bg: linear-gradient(135deg, #2c3e50, #4a6491);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --secondary-color: #e2e8f0;
+            --input-bg: #0f172a;
+            --input-border: #475569;
+            --navbar-bg: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background: var(--navbar-bg);
+            padding: 1rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .profile-circle {
+            width: 40px;
+            height: 40px;
+            background-color: var(--warning-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .profile-circle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--navbar-bg);
+            /* Use navbar bg for consistency */
+            color: white;
+            margin-top: auto;
+            padding: 60px 0 30px;
+        }
+
+        /* Alert Customization */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-graduation-cap me-2"></i>
+                EduReview
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}"><i class="fas fa-chart-bar me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'compare' %}"><i class="fas fa-balance-scale me-1"></i> Compare</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Navbar Theme Toggle -->
+                    <li class="nav-item me-3">
+                        <button class="btn btn-link nav-link p-0 text-white" id="navbarThemeToggleBtn" title="Toggle theme">
+                            <i class="fas fa-moon fs-5"></i>
+                        </button>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown profile-dropdown">
+                        <a class="nav-link p-0" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <div class="profile-circle" title="{{ user.email }}">
+                                {% if user_profile and user_profile.profile_picture %}
+                                <img src="{{ user_profile.profile_picture.url }}" alt="Profile"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                {% else %}
+                                {{ user.username|make_list|first|upper }}
+                                {% endif %}
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="navbarDropdown"
+                            style="min-width: 240px; border-radius: 12px; margin-top: 15px; padding: 10px;">
+                            <li class="px-3 py-3 border-bottom mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3 d-flex align-items-center justify-content-center bg-light rounded-circle"
+                                        style="width: 45px; height: 45px; overflow: hidden; font-weight: bold; font-size: 1.2rem; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white;">
+                                        {% if user_profile and user_profile.profile_picture %}
+                                        <img src="{{ user_profile.profile_picture.url }}" alt="Profile"
+                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% else %}
+                                        {{ user.username|make_list|first|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ user.first_name|default:user.username }}</div>
+                                        <div class="text-muted small">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><a class="dropdown-item py-2 rounded" href="{% url 'profile' %}"><i
+                                        class="fas fa-user me-3 text-primary"></i>My Profile</a></li>
+                            <li><a class="dropdown-item py-2 rounded" href="{% url 'my_reviews' %}"><i
+                                        class="fas fa-list-ul me-3 text-info"></i>My Reviews</a></li>
+                            <li><a class="dropdown-item py-2 rounded" href="{% url 'settings' %}"><i
+                                        class="fas fa-cog me-3 text-secondary"></i>Settings</a></li>
+                            <li>
+                                <hr class="dropdown-divider my-2">
+                            </li>
+                            <li><a class="dropdown-item py-2 rounded text-danger" href="{% url 'logout' %}"><i
+                                        class="fas fa-sign-out-alt me-3"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i
+                    class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-3 fs-4"></i>
+                <div>{{ message }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- Footer -->
+    <footer class="footer py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">About</h5>
+                    <p class="text-white-50">Project Review & Public Opinion System for colleges and institutions.</p>
+                    <div class="social-icons">
+                        <a href="#" class="text-white me-3 fs-5"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3 fs-5"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3 fs-5"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h5 class="fw-bold mb-3">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'index' %}"
+                                class="text-white-50 text-decoration-none hover-white">Home</a></li>
+                        <li class="mb-2"><a href="#"
+                                class="text-white-50 text-decoration-none hover-white">Institutes</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white">Reviews</a>
+                        </li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-white">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <h5 class="fw-bold mb-3">Contact Us</h5>
+                    <p class="text-white-50 mb-2"><i class="fas fa-envelope me-2"></i> support@edureview.com</p>
+                    <p class="text-white-50 mb-2"><i class="fas fa-phone me-2"></i> +91 98765 43210</p>
+                    <p class="text-white-50"><i class="fas fa-map-marker-alt me-2"></i> 123 Education St, Campus City
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center text-white-50">
+                <p class="mb-0">© 2025 Project Review System | All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Dark Mode Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Theme Toggle Logic
+            const themeToggle = document.getElementById('themeToggle');
+            const navbarThemeToggleBtn = document.getElementById('navbarThemeToggleBtn');
+            const savedTheme = localStorage.getItem('theme');
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    if (themeToggle) themeToggle.checked = true;
+                    if (navbarThemeToggleBtn) {
+                        navbarThemeToggleBtn.innerHTML = '<i class="fas fa-sun fs-5"></i>';
+                        navbarThemeToggleBtn.setAttribute('title', 'Switch to Light Mode');
+                    }
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                    if (themeToggle) themeToggle.checked = false;
+                    if (navbarThemeToggleBtn) {
+                        navbarThemeToggleBtn.innerHTML = '<i class="fas fa-moon fs-5"></i>';
+                        navbarThemeToggleBtn.setAttribute('title', 'Switch to Dark Mode');
+                    }
+                }
+            }
+
+            // Apply saved theme on load
+            applyTheme(savedTheme);
+
+            // Listen for navbar toggle button click
+            if (navbarThemeToggleBtn) {
+                navbarThemeToggleBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const currentTheme = localStorage.getItem('theme');
+                    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                });
+            }
+
+            // Listen for settings page toggle change
+            if (themeToggle) {
+                themeToggle.addEventListener('change', function () {
+                    applyTheme(this.checked ? 'dark' : 'light');
+                });
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
