@@ -1,0 +1,279 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Review Details - EduReview{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Card Styles */
+    .review-detail-card {
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        background-color: var(--card-bg);
+    }
+
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .card-header {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-body {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+
+    .bg-light {
+        background-color: var(--input-bg) !important;
+        color: var(--text-color) !important;
+    }
+
+    h4,
+    h5 {
+        color: var(--secondary-color) !important;
+    }
+
+    .text-dark {
+        color: var(--text-color) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{% url 'view_reviews' review.college_name %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Reviews
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0 review-detail-card">
+                <div class="card-header p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-light text-white me-3" style="overflow: hidden; padding: 0;">
+                                {% with profile_pic=review.user|get_profile_pic %}
+                                {% if profile_pic %}
+                                <img src="{{ profile_pic }}" alt="{{ review.user_name }}"
+                                    style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <div class="d-flex align-items-center justify-content-center w-100 h-100 bg-primary">
+                                    {{ review.user.first_name|default:review.user.username|slice:":1"|upper }}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div>
+                                <h4 class="mb-1 fw-bold">{{ review.user.first_name|default:review.user.username }}
+                                </h4>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock me-1"></i> {{ review.created_at|date:"F j, Y" }}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-user-graduate me-1"></i> Verified Student
+                                    <br>
+                                    <div class="d-flex align-items-center mt-1">
+                                        {% with image_path=review.college_name|get_institution_image %}
+                                        {% if image_path %}
+                                        <img src="{% static image_path %}" alt="{{ review.college_name }}"
+                                            style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 1px solid var(--border-color);">
+                                        {% else %}
+                                        <i class="fas fa-university me-2 text-primary"></i>
+                                        {% endif %}
+                                        {% endwith %}
+                                        <span class="text-primary fw-bold">{{ review.college_name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="badge bg-warning text-dark mb-2 p-2" style="font-size: 1rem;">
+                                {{ review.overall_rating }}/5 <i class="fas fa-star ms-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Overall Review -->
+                    <div class="mb-4">
+                        <h5 class="text-primary mb-3"><i class="fas fa-quote-left me-2"></i>Overall Verdict</h5>
+                        <p class="lead text-dark">{{ review.overall_review|linebreaks }}</p>
+                    </div>
+
+                    <hr class="my-4" style="border-color: var(--border-color);">
+
+                    <div class="row g-4">
+                        <!-- Academics -->
+                        <div class="col-md-12">
+                            <h5 class="text-primary mb-3"><i class="fas fa-graduation-cap me-2"></i>Academics &
+                                Faculty</h5>
+                            {% if review.education_system %}
+                            <div class="bg-light p-3 rounded mb-3">
+                                <strong>Education System</strong>
+                                <p class="mb-0 mt-1">{{ review.education_system }}</p>
+                            </div>
+                            {% endif %}
+                            {% if review.staff_review %}
+                            <div class="bg-light p-3 rounded mb-3">
+                                <strong>Faculty & Staff</strong>
+                                <p class="mb-0 mt-1">{{ review.staff_review }}</p>
+                            </div>
+                            {% endif %}
+                            {% if review.practical_experience %}
+                            <div class="bg-light p-3 rounded mt-3">
+                                <strong>Practical Experience</strong>
+                                <p class="mb-0 mt-1">{{ review.practical_experience }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Infrastructure -->
+                        <div class="col-md-12">
+                            <h5 class="text-primary mb-3"><i class="fas fa-building me-2"></i>Infrastructure &
+                                Facilities</h5>
+                            <div class="row g-3">
+                                {% if review.infrastructure_review %}
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <strong>Infrastructure</strong>
+                                        <p class="mb-0 mt-1">{{ review.infrastructure_review }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if review.hostel_available or review.hostel_review %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Hostel</strong>
+                                        {% if review.hostel_available %}
+                                        <span class="badge bg-success ms-2">Available</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary ms-2">Not Available</span>
+                                        {% endif %}
+                                        {% if review.hostel_review %}
+                                        <p class="mb-0 mt-1">{{ review.hostel_review }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if review.canteen_available or review.canteen_review %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Canteen</strong>
+                                        {% if review.canteen_available %}
+                                        <span class="badge bg-success ms-2">Available</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary ms-2">Not Available</span>
+                                        {% endif %}
+                                        {% if review.canteen_review %}
+                                        <p class="mb-0 mt-1">{{ review.canteen_review }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if review.security_review %}
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <strong>Security</strong>
+                                        <p class="mb-0 mt-1">{{ review.security_review }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Career -->
+                        <div class="col-md-12">
+                            <h5 class="text-primary mb-3"><i class="fas fa-briefcase me-2"></i>Career & Placement
+                            </h5>
+                            <div class="row g-3">
+                                {% if review.placement_review %}
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="d-flex justify-content-between">
+                                            <strong>Placements</strong>
+                                            {% if review.placement_rating %}
+                                            <span class="text-warning">
+                                                {{ review.placement_rating }}/5 <i class="fas fa-star"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="mb-0 mt-1">{{ review.placement_review }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if review.entrepreneurship_support %}
+                                <div class="col-md-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <strong>Entrepreneurship Support</strong>
+                                        <p class="mb-0 mt-1">{{ review.entrepreneurship_support }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Other Details -->
+                        <div class="col-md-12">
+                            <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Other Details</h5>
+                            <div class="row g-3">
+                                {% if review.fees_structure %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Fees Structure</strong>
+                                        <p class="mb-0 mt-1">{{ review.fees_structure }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if review.management_review %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Management</strong>
+                                        <p class="mb-0 mt-1">{{ review.management_review }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if review.sports_cultural %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Sports & Cultural</strong>
+                                        <p class="mb-0 mt-1">{{ review.sports_cultural }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if review.travel_expense %}
+                                <div class="col-md-6">
+                                    <div class="bg-light p-3 rounded h-100">
+                                        <strong>Travel & Commute</strong>
+                                        <p class="mb-0 mt-1">{{ review.travel_expense }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

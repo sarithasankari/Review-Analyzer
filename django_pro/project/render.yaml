@@ -1,0 +1,24 @@
+databases:
+  - name: my-postgres-db
+    databaseName: my_postgres_db
+    user: my_user
+    plan: free
+
+services:
+  - type: web
+    name: django-app
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn project.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: my-postgres-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: PYTHON_VERSION
+        value: 3.10.0
