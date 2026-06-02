@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -o errexit
 
-python manage.py collectstatic --no-input
+echo "Current directory:"
+pwd
 
-python manage.py migrate
+echo "Files:"
+ls
+
+echo "Requirements:"
+cat requirements.txt
+
+python manage.py collectstatic --no-input
