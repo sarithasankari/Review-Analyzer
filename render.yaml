@@ -2,11 +2,13 @@ databases:
   - name: my-postgres-db
     databaseName: my_postgres_db
     user: my_user
+    plan: free
 
 services:
   - type: web
     name: django-app
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn project.wsgi:application"
     envVars:
